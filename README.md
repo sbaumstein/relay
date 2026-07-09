@@ -20,9 +20,20 @@ Create a `.env.local` file in the project root:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_maps_key
 ```
 
-Keys are in **Supabase Dashboard → Settings → API**.
+Supabase keys are in **Supabase Dashboard → Settings → API**.
+
+### Google Maps API key (location autocomplete)
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) and create a project
+2. Enable **Places API** and **Maps JavaScript API**
+3. Create an API key under **Credentials**
+4. Restrict the key to your domain (optional but recommended)
+5. Add it as `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in `.env.local` and Vercel env vars
+
+Without the key, the address field falls back to a plain text input so the app still works.
 
 ## Supabase Setup
 

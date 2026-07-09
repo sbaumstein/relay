@@ -18,8 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
-import { CLASS_TYPES, NEIGHBORHOODS, SKILL_LEVELS } from '@/types'
+import { CLASS_TYPES, SKILL_LEVELS } from '@/types'
 import type { ClassType, SkillLevel, Profile, Studio } from '@/types'
+import { LocationPicker } from './LocationPicker'
 import { formatCents } from '@/lib/stripe/helpers'
 import { createClient } from '@/lib/supabase/client'
 
@@ -241,24 +242,15 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="address">Address *</Label>
-          <Input id="address" placeholder="123 Main St, New York, NY" {...register('address')} />
-          {errors.address && <p className="text-sm text-red-500">{errors.address.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label>Neighborhood</Label>
-          <Select onValueChange={(val) => setValue('neighborhood', val)}>
-            <SelectTrigger><SelectValue placeholder="Select neighborhood" /></SelectTrigger>
-            <SelectContent>
-              {NEIGHBORHOODS.map((n) => (
-                <SelectItem key={n} value={n}>{n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label>Location *</Label>
+        <LocationPicker
+          onSelect={(address, neighborhood) => {
+            setValue('address', address, { shouldValidate: true })
+            if (neighborhood) setValue('neighborhood', neighborhood)
+          }}
+          error={errors.address?.message}
+        />
       </div>
 
       <div className="space-y-2 max-w-xs">
