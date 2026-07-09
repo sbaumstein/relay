@@ -1,65 +1,133 @@
-import Image from "next/image";
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Dumbbell, ArrowRight, CheckCircle } from 'lucide-react'
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-white">
+      {/* Nav */}
+      <nav className="border-b">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold text-lg">
+            <Dumbbell className="h-5 w-5" />
+            Workout Exchange
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/login">Sign in</Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link href="/signup">Get started</Link>
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="max-w-4xl mx-auto px-4 py-24 text-center">
+        <h1 className="text-5xl font-bold tracking-tight mb-6">
+          Can&apos;t make it to class?
+          <br />
+          <span className="text-blue-600">Someone else can.</span>
+        </h1>
+        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          Workout Exchange lets you list your pre-booked fitness class so someone else can take your
+          spot. Avoid late cancellation fees. Help others get into sold-out classes.
+        </p>
+        <div className="flex items-center justify-center gap-4">
+          <Button size="lg" asChild>
+            <Link href="/browse">
+              Browse class spots
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild>
+            <Link href="/signup">Post a spot</Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">How it works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                step: '1',
+                title: 'Post your spot',
+                description:
+                  "Can't attend your booked class? List it with the studio, time, and price you paid.",
+              },
+              {
+                step: '2',
+                title: 'Someone claims it',
+                description:
+                  'Another member sees your listing and claims it. For paid classes, they pay you directly through Stripe.',
+              },
+              {
+                step: '3',
+                title: 'Everyone wins',
+                description:
+                  "You avoid a cancellation fee. They get into a class they wanted. It's that simple.",
+              },
+            ].map((item) => (
+              <div key={item.step} className="text-center">
+                <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center mx-auto mb-4">
+                  {item.step}
+                </div>
+                <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
+                <p className="text-muted-foreground text-sm">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-20">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Why Workout Exchange</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              'No more late cancellation fees',
+              'Get into waitlisted or sold-out classes',
+              'Secure payments via Stripe',
+              'Free to list, free to claim free classes',
+              'Yoga, spin, HIIT, barre, boxing & more',
+              'Simple, fast listings in under a minute',
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-blue-600 py-16">
+        <div className="max-w-xl mx-auto px-4 text-center text-white">
+          <h2 className="text-3xl font-bold mb-4">Ready to swap a class?</h2>
+          <p className="text-blue-100 mb-8">
+            Join and start browsing available class spots in your city.
           </p>
+          <Button size="lg" variant="secondary" asChild>
+            <Link href="/signup">
+              Create your account
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t py-8">
+        <div className="max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground">
+          © {new Date().getFullYear()} Workout Exchange. All rights reserved.
         </div>
-      </main>
+      </footer>
     </div>
-  );
+  )
 }
