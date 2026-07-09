@@ -31,6 +31,19 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
       .select('seller_id, status'),
   ])
 
+  // Check if the current user has an active claim on this listing
+  let userHasClaim = false
+  if (user) {
+    const { data: userClaim } = await supabase
+      .from('claims')
+      .select('id')
+      .eq('listing_id', id)
+      .eq('claimer_id', user.id)
+      .not('status', 'eq', 'disputed')
+      .maybeSingle()
+    userHasClaim = !!userClaim
+  }
+
   if (!listingData) notFound()
 
   const listing = listingData as Listing
@@ -177,8 +190,8 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
           </Card>
         </div>
 
-        {/* Booking confirmation screenshot */}
-        {listing.confirmation_screenshot_url && (
+        {/* Booking confirmation screenshot — only visible to seller or buyer after claiming */}
+        {listing.confirmation_screenshot_url && (isOwner || userHasClaim) && (
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-3">
@@ -190,6 +203,14 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 alt="Booking confirmation"
                 className="rounded-lg border max-h-64 object-contain"
               />
+            </CardContent>
+          </Card>
+        )}
+        {listing.confirmation_screenshot_url && !isOwner && !userHasClaim && (
+          <Card className="border-dashed">
+            <CardContent className="p-5 flex items-center gap-3 text-muted-foreground">
+              <ShieldCheck className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm">Booking confirmation is unlocked after you claim this spot.</p>
             </CardContent>
           </Card>
         )}
