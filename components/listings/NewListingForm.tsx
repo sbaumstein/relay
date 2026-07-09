@@ -20,7 +20,6 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { CLASS_TYPES, SKILL_LEVELS } from '@/types'
 import type { ClassType, SkillLevel, Profile, Studio } from '@/types'
-import { LocationPicker } from './LocationPicker'
 import { formatCents } from '@/lib/stripe/helpers'
 import { createClient } from '@/lib/supabase/client'
 
@@ -243,14 +242,9 @@ export function NewListingForm({ profile }: NewListingFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Location *</Label>
-        <LocationPicker
-          onSelect={(address, neighborhood) => {
-            setValue('address', address, { shouldValidate: true })
-            if (neighborhood) setValue('neighborhood', neighborhood)
-          }}
-          error={errors.address?.message}
-        />
+        <Label htmlFor="address">Address *</Label>
+        <Input id="address" placeholder="123 Main St, New York, NY" {...register('address')} />
+        {errors.address && <p className="text-sm text-red-500">{errors.address.message}</p>}
       </div>
 
       <div className="space-y-2 max-w-xs">
