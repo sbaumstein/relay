@@ -54,11 +54,22 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Resolve studio name from studio_id
+  let studioName = body.studio_name ?? ''
+  if (body.studio_id && !studioName) {
+    const { data: studio } = await supabase
+      .from('studios')
+      .select('name')
+      .eq('id', body.studio_id)
+      .single()
+    studioName = studio?.name ?? ''
+  }
+
   const { data: listing, error } = await supabase
     .from('listings')
     .insert({
       seller_id: user.id,
-      studio_name: body.studio_name,
+      studio_name: studioName,
       class_name: body.class_name,
       instructor_name: body.instructor_name || null,
       class_type: body.class_type,
