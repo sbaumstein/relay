@@ -33,7 +33,5 @@ All third-party services used by this project.
 - **What it does:** Will handle escrow payments when activated
 - **Keys:** `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` → placeholders in `.env.local`
 
-## Linear — Project Management
-- **URL:** https://linear.app
-- **Account:** sambaumstein@gmail.com
+## Giuthub Issues — Project Management
 - **What it does:** Issue tracking and task management
