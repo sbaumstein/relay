@@ -3,6 +3,15 @@ import type { Listing, Claim } from '@/types'
 
 export const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder')
 
+const whitelist = process.env.TEST_EMAIL_WHITELIST
+  ? process.env.TEST_EMAIL_WHITELIST.split(',').map((e) => e.trim().toLowerCase())
+  : null
+
+export function isEmailAllowed(email: string): boolean {
+  if (!whitelist) return true
+  return whitelist.includes(email.toLowerCase())
+}
+
 interface ClaimEmailParams {
   claimerEmail: string
   claimerName: string | null
@@ -64,20 +73,12 @@ export async function sendClaimEmails({
     <p>Thanks for using Workout Exchange!</p>
   `
 
-  await Promise.all([
-    resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL!,
-      to: claimerEmail,
-      subject: claimerSubject,
-      html: claimerBody,
-    }),
-    resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL!,
-      to: sellerEmail,
-      subject: sellerSubject,
-      html: sellerBody,
-    }),
-  ])
+  const sends = []
+  if (isEmailAllowed(claimerEmail))
+    sends.push(resend.emails.send({ from: process.env.RESEND_FROM_EMAIL!, to: claimerEmail, subject: claimerSubject, html: claimerBody }))
+  if (isEmailAllowed(sellerEmail))
+    sends.push(resend.emails.send({ from: process.env.RESEND_FROM_EMAIL!, to: sellerEmail, subject: sellerSubject, html: sellerBody }))
+  await Promise.all(sends)
 }
 
 export async function sendListingPostedEmail({
@@ -90,6 +91,7 @@ export async function sendListingPostedEmail({
   listing: Listing
 }) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  if (!isEmailAllowed(sellerEmail)) return
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: sellerEmail,
