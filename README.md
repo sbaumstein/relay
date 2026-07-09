@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Relay
+
+A marketplace for transferring boutique fitness class spots. Sellers list classes they can't attend, buyers claim them — payment is held in escrow and released after the class.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`npm run dev` automatically pings Supabase on startup to wake it if paused.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+Create a `.env.local` file in the project root:
 
-To learn more about Next.js, take a look at the following resources:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Keys are in **Supabase Dashboard → Settings → API**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Supabase Setup
 
-## Deploy on Vercel
+### First time
+1. Run `supabase-migrations.sql` in Supabase SQL Editor
+2. Run Query 1 from `supabase-studios-migration.sql`, then Query 2 (they must be separate due to enum constraints)
+3. Create a public Storage bucket named `confirmations`
+4. Sign up at `/signup`, then seed mock data:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+curl -X POST http://localhost:3000/api/seed
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### If the app stops working (ENOTFOUND error)
+Supabase pauses free-tier projects after ~1 week of inactivity.
+
+**Fix:** Go to [supabase.com](https://supabase.com) → your project → click **Resume project**. Takes ~30 seconds. Then restart the dev server.
+
+To avoid this on future restarts, `npm run dev` pings Supabase automatically and will warn you if it's unreachable.
+
+### Reset seed data
+```bash
+curl -X DELETE http://localhost:3000/api/seed
+curl -X POST http://localhost:3000/api/seed
+```
+
+## Deployment
+
+Deployed on Vercel — pushes to `main` deploy automatically in ~60 seconds.
+
+Add the three Supabase env vars in **Vercel → Project → Settings → Environment Variables**.
+
+After deploying, add your Vercel URL to **Supabase → Authentication → URL Configuration → Allowed Redirect URLs**.
