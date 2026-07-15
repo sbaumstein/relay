@@ -21,16 +21,16 @@ export function Navbar({ user }: NavbarProps) {
   }
 
   return (
-    <nav className="sticky top-0 z-10 border-b border-white/10 bg-black/80 backdrop-blur-md">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/browse" className="text-lg font-bold tracking-widest uppercase text-white">
+    <nav className="sticky top-0 z-10 border-b border-white/20 backdrop-blur-md" style={{ background: 'rgba(20,20,20,0.94)' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+        <Link href="/browse" className="text-base sm:text-lg font-bold tracking-widest uppercase text-white">
           Relay
         </Link>
 
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-5 sm:gap-8">
           <Link
             href="/browse"
-            className={`text-sm tracking-wide transition-colors ${pathname === '/browse' ? 'text-white' : 'text-white/50 hover:text-white'}`}
+            className={`text-sm tracking-wide transition-colors ${pathname === '/browse' ? 'text-white' : 'text-white/75 hover:text-white'}`}
           >
             Browse
           </Link>
@@ -39,13 +39,13 @@ export function Navbar({ user }: NavbarProps) {
             <>
               <Link
                 href="/dashboard"
-                className={`text-sm tracking-wide transition-colors ${pathname === '/dashboard' ? 'text-white' : 'text-white/50 hover:text-white'}`}
+                className={`text-sm tracking-wide transition-colors ${pathname === '/dashboard' ? 'text-white' : 'text-white/75 hover:text-white'}`}
               >
                 Profile
               </Link>
               <button
                 onClick={handleSignOut}
-                className="text-sm tracking-wide text-white/50 hover:text-white transition-colors"
+                className="text-sm tracking-wide text-white/75 hover:text-white transition-colors hidden sm:block"
               >
                 Sign out
               </button>
@@ -54,14 +54,14 @@ export function Navbar({ user }: NavbarProps) {
 
           {!user && (
             <>
-              <Link href="/login" className="text-sm tracking-wide text-white/50 hover:text-white transition-colors">
+              <Link href="/login" className="text-sm tracking-wide text-white/75 hover:text-white transition-colors">
                 Sign in
               </Link>
               <Link
                 href="/signup"
-                className="text-sm tracking-wide border border-white/40 hover:border-white px-4 py-1.5 text-white transition-colors"
+                className="text-sm tracking-wide border border-white/40 hover:border-white px-3 sm:px-4 py-1.5 text-white transition-colors"
               >
-                Get started
+                Join
               </Link>
             </>
           )}

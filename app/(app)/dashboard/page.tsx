@@ -14,16 +14,16 @@ function StatusPill({ status }: { status: string }) {
     claimed:              'text-blue-400 border-blue-400/30',
     completed:            'text-blue-400 border-blue-400/30',
     auto_released:        'text-blue-400 border-blue-400/30',
-    expired:              'text-white/30 border-white/10',
+    expired:              'text-white/60 border-white/20',
     cancelled:            'text-red-400 border-red-400/30',
     disputed:             'text-red-400 border-red-400/30',
     needs_review:         'text-orange-400 border-orange-400/30',
     pending_confirmation: 'text-yellow-400 border-yellow-400/30',
     pending_payment:      'text-yellow-400 border-yellow-400/30',
-    refunded:             'text-white/30 border-white/10',
+    refunded:             'text-white/60 border-white/20',
   }
   return (
-    <span className={`text-xs border px-2 py-0.5 ${colors[status] ?? 'text-white/40 border-white/10'}`}>
+    <span className={`text-xs border px-2 py-0.5 ${colors[status] ?? 'text-white/70 border-white/20'}`}>
       {status.replace(/_/g, ' ')}
     </span>
   )
@@ -53,16 +53,16 @@ export default async function DashboardPage() {
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-10">
-        <p className="text-xs text-white/30 uppercase tracking-widest mb-1">Profile</p>
+        <p className="text-xs text-white/60 uppercase tracking-widest mb-1">Profile</p>
         <h1 className="text-3xl font-bold text-white">{p?.full_name ?? user.email}</h1>
       </div>
 
       {/* Reputation */}
-      <div className="border border-white/10 p-5 mb-10">
-        <p className="text-xs text-white/30 uppercase tracking-widest mb-3">Seller reputation</p>
+      <div className="border border-white/20 p-5 mb-10">
+        <p className="text-xs text-white/60 uppercase tracking-widest mb-3">Seller reputation</p>
         <div className="flex items-center justify-between">
           <StarRating stars={sellerStats.stars} total={sellerStats.total} showLabel />
-          <p className="text-sm text-white/40">
+          <p className="text-sm text-white/70">
             {sellerStats.total < 5
               ? `${5 - sellerStats.total} more to unlock rating`
               : `${sellerStats.rate}% · escrow holds ${sellerStats.holdHours}hr`}
@@ -73,31 +73,31 @@ export default async function DashboardPage() {
       {/* My Listings */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/30 uppercase tracking-widest">My listings ({myListings?.length ?? 0})</p>
-          <Link href="/listings/new" className="text-xs text-white/40 hover:text-white transition-colors">+ New</Link>
+          <p className="text-xs text-white/60 uppercase tracking-widest">My listings ({myListings?.length ?? 0})</p>
+          <Link href="/listings/new" className="text-xs text-white/70 hover:text-white transition-colors">+ New</Link>
         </div>
         {!myListings || myListings.length === 0 ? (
-          <p className="text-white/30 text-sm py-8 text-center border border-white/8">No listings yet</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No listings yet</p>
         ) : (
-          <div className="border-t border-white/8">
+          <div className="border-t border-white/20">
             {myListings.map((listing) => {
               const l = listing as Listing
               const classDate = new Date(l.class_datetime)
               const typeLabel = CLASS_TYPES.find((t) => t.value === l.class_type)?.label
               return (
-                <Link key={l.id} href={`/listings/${l.id}`} className="flex items-center gap-4 py-3.5 px-1 border-b border-white/8 hover:bg-white/4 transition-colors group">
+                <Link key={l.id} href={`/listings/${l.id}`} className="flex items-center gap-4 py-3.5 px-1 border-b border-white/20 hover:bg-white/6 transition-colors group">
                   <div className="w-16 flex-shrink-0 text-center">
                     <p className="text-lg font-bold text-white leading-none">{classDate.getDate()}</p>
-                    <p className="text-xs text-white/30">{classDate.toLocaleDateString('en-US', { month: 'short' })}</p>
+                    <p className="text-xs text-white/60">{classDate.toLocaleDateString('en-US', { month: 'short' })}</p>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-medium truncate">{l.class_name}</p>
-                    <p className="text-xs text-white/40 truncate">{l.studio_name} · {typeLabel}</p>
+                    <p className="text-xs text-white/70 truncate">{l.studio_name} · {typeLabel}</p>
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-3">
                     <StatusPill status={l.status} />
                     <p className="text-white font-semibold text-sm">{formatCents(l.price_cents)}</p>
-                    <span className="text-white/20 group-hover:text-white/50 transition-colors">→</span>
+                    <span className="text-white/40 group-hover:text-white/75 transition-colors">→</span>
                   </div>
                 </Link>
               )
@@ -109,12 +109,12 @@ export default async function DashboardPage() {
       {/* My Claims */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/30 uppercase tracking-widest">Claimed spots ({myClaims?.length ?? 0})</p>
+          <p className="text-xs text-white/60 uppercase tracking-widest">Claimed spots ({myClaims?.length ?? 0})</p>
         </div>
         {!myClaims || myClaims.length === 0 ? (
-          <p className="text-white/30 text-sm py-8 text-center border border-white/8">No claimed spots yet</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No claimed spots yet</p>
         ) : (
-          <div className="border-t border-white/8">
+          <div className="border-t border-white/20">
             {myClaims.map((claim) => {
               const c = claim as Claim
               const l = c.listing as Listing & { duration_minutes?: number } | undefined
@@ -126,20 +126,20 @@ export default async function DashboardPage() {
               const classInFuture = classDate > now
               const needsCheckin = isPending && classEnd < now && !classInFuture
               return (
-                <div key={c.id} className="py-3.5 px-1 border-b border-white/8">
-                  <Link href={`/listings/${l.id}`} className="flex items-center gap-4 hover:bg-white/4 transition-colors group">
+                <div key={c.id} className="py-3.5 px-1 border-b border-white/20">
+                  <Link href={`/listings/${l.id}`} className="flex items-center gap-4 hover:bg-white/6 transition-colors group">
                     <div className="w-16 flex-shrink-0 text-center">
                       <p className="text-lg font-bold text-white leading-none">{classDate.getDate()}</p>
-                      <p className="text-xs text-white/30">{classDate.toLocaleDateString('en-US', { month: 'short' })}</p>
+                      <p className="text-xs text-white/60">{classDate.toLocaleDateString('en-US', { month: 'short' })}</p>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{l.class_name}</p>
-                      <p className="text-xs text-white/40 truncate">{l.studio_name}</p>
+                      <p className="text-xs text-white/70 truncate">{l.studio_name}</p>
                     </div>
                     <div className="flex-shrink-0 flex items-center gap-3">
                       <StatusPill status={c.status} />
                       <p className="text-white font-semibold text-sm">{formatCents(c.amount_cents)}</p>
-                      <span className="text-white/20 group-hover:text-white/50 transition-colors">→</span>
+                      <span className="text-white/40 group-hover:text-white/75 transition-colors">→</span>
                     </div>
                   </Link>
                   {isPending && classInFuture && (
