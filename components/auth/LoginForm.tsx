@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -32,16 +32,29 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
+  useEffect(() => {
+    if (searchParams.get('error') === 'verify_email') {
+      toast.error('Please verify your email before signing in. Check your inbox for the confirmation link.')
+    }
+  }, [searchParams])
+
   const onSubmit = async (data: FormData) => {
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     })
 
     if (error) {
       toast.error(error.message)
+      setLoading(false)
+      return
+    }
+
+    if (!signInData.user.email_confirmed_at) {
+      await supabase.auth.signOut()
+      toast.error('Please verify your email before signing in. Check your inbox for the confirmation link.')
       setLoading(false)
       return
     }

@@ -41,6 +41,9 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  if (!user.email_confirmed_at) {
+    return NextResponse.json({ error: 'Please verify your email before posting a listing' }, { status: 403 })
+  }
 
   const body: NewListingFormData & { confirmation_screenshot_url?: string } = await request.json()
 

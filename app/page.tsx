@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Dumbbell, ArrowRight, CheckCircle } from 'lucide-react'
+import { Dumbbell, ArrowRight } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -10,7 +10,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-lg">
             <Dumbbell className="h-5 w-5" />
-            Workout Exchange
+            Relay
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
@@ -31,7 +31,7 @@ export default function HomePage() {
           <span className="text-blue-600">Someone else can.</span>
         </h1>
         <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Workout Exchange lets you list your pre-booked fitness class so someone else can take your
+          Relay lets you list your pre-booked fitness class so someone else can take your
           spot. Avoid late cancellation fees. Help others get into sold-out classes.
         </p>
         <div className="flex items-center justify-center gap-4">
@@ -84,28 +84,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Why Workout Exchange</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              'No more late cancellation fees',
-              'Get into waitlisted or sold-out classes',
-              'Secure payments via Stripe',
-              'Free to list, free to claim free classes',
-              'Yoga, spin, HIIT, barre, boxing & more',
-              'Simple, fast listings in under a minute',
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="bg-blue-600 py-16">
         <div className="max-w-xl mx-auto px-4 text-center text-white">
@@ -125,7 +103,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Workout Exchange. All rights reserved.
+          © {new Date().getFullYear()} Relay. All rights reserved.
         </div>
       </footer>
     </div>

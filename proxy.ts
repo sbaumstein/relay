@@ -47,18 +47,23 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const isVerified = !!user?.email_confirmed_at
+
   const pathname = request.nextUrl.pathname
   const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p))
   const isAuthPath = AUTH_PATHS.some((p) => pathname.startsWith(p))
 
-  if (isProtected && !user) {
+  if (isProtected && (!user || !isVerified)) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('redirectTo', pathname)
+    if (user && !isVerified) {
+      url.searchParams.set('error', 'verify_email')
+    }
     return NextResponse.redirect(url)
   }
 
-  if (isAuthPath && user) {
+  if (isAuthPath && user && isVerified) {
     const url = request.nextUrl.clone()
     url.pathname = '/browse'
     return NextResponse.redirect(url)

@@ -9,6 +9,9 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user.email_confirmed_at) {
+    return NextResponse.json({ error: 'Please verify your email before claiming a spot' }, { status: 403 })
+  }
 
   const { listing_id } = await request.json()
   if (!listing_id) return NextResponse.json({ error: 'listing_id is required' }, { status: 400 })
