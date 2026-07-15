@@ -35,8 +35,11 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Skip auth checks for Stripe webhook
-  if (request.nextUrl.pathname === '/api/stripe/webhook') {
+  // Skip auth checks for Stripe webhook and auth callback
+  if (
+    request.nextUrl.pathname === '/api/stripe/webhook' ||
+    request.nextUrl.pathname.startsWith('/auth/')
+  ) {
     return supabaseResponse
   }
 
