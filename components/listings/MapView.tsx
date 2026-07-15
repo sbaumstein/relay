@@ -41,8 +41,10 @@ function getCoords(studioName: string): [number, number] {
   return [40.73 + (seed % 10) * 0.008, -74.01 + (seed % 7) * 0.009]
 }
 
-type LeafletMap = import('leaflet').Map
-type LeafletLayer = import('leaflet').LayerGroup
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LeafletMap = any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LeafletLayer = any
 
 export function MapView({ listings }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null)
@@ -134,8 +136,9 @@ export function MapView({ listings }: MapViewProps) {
 }
 
 function drawMarkers(
-  L: typeof import('leaflet'),
-  layer: import('leaflet').LayerGroup,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  L: any,
+  layer: LeafletLayer,
   listings: MapListing[],
 ) {
   layer.clearLayers()
