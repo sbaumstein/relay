@@ -1,9 +1,8 @@
 import Link from 'next/link'
-import { MapPin, Clock, Calendar } from 'lucide-react'
-import { StarRating } from '@/components/ui/StarRating'
 import { CLASS_TYPES, SKILL_LEVELS, getSellerStats } from '@/types'
 import type { Listing, SellerStats } from '@/types'
 import { formatCents } from '@/lib/stripe/helpers'
+import { StarRating } from '@/components/ui/StarRating'
 
 interface ListingCardProps {
   listing: Listing
@@ -12,61 +11,66 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, sellerStats }: ListingCardProps) {
   const classDate = new Date(listing.class_datetime)
-  const dateLabel = classDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-  const timeLabel = classDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-
+  const day = classDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const time = classDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
   const classTypeLabel = CLASS_TYPES.find((t) => t.value === listing.class_type)?.label ?? listing.class_type
   const skillLabel = SKILL_LEVELS.find((s) => s.value === listing.skill_level)?.label ?? listing.skill_level
   const stats = sellerStats ?? getSellerStats(0, 0)
 
   return (
-    <Link href={`/listings/${listing.id}`} className="block group">
-      <div className="border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all p-5 flex flex-col gap-3">
-        {/* Studio + price */}
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-xs font-medium text-white/40 uppercase tracking-widest truncate">
+    <Link href={`/listings/${listing.id}`} className="group block">
+      <div className="flex items-center gap-6 py-4 px-2 border-b border-white/8 hover:bg-white/4 transition-colors">
+
+        {/* Date column */}
+        <div className="w-24 flex-shrink-0 text-center">
+          <p className="text-xs text-white/40 uppercase tracking-widest">
+            {classDate.toLocaleDateString('en-US', { weekday: 'short' })}
+          </p>
+          <p className="text-2xl font-bold text-white leading-none mt-0.5">
+            {classDate.getDate()}
+          </p>
+          <p className="text-xs text-white/40 mt-0.5">
+            {classDate.toLocaleDateString('en-US', { month: 'short' })}
+          </p>
+          <p className="text-xs text-white/60 mt-1 font-medium">{time}</p>
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-12 bg-white/10 flex-shrink-0" />
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-white/40 uppercase tracking-widest mb-0.5 truncate">
             {listing.studio_name}
           </p>
+          <p className="text-white font-semibold text-base truncate">{listing.class_name}</p>
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="text-xs text-white/40">{classTypeLabel}</span>
+            <span className="text-white/20">·</span>
+            <span className="text-xs text-white/40">{skillLabel}</span>
+            {listing.address && (
+              <>
+                <span className="text-white/20">·</span>
+                <span className="text-xs text-white/40 truncate">{listing.neighborhood ?? listing.address}</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Right: price + stars */}
+        <div className="flex-shrink-0 text-right">
           {listing.is_free ? (
-            <span className="text-xs font-bold text-emerald-400">Free</span>
+            <p className="text-emerald-400 font-bold text-sm">Free</p>
           ) : (
-            <span className="text-base font-bold text-white">{formatCents(listing.price_cents)}</span>
+            <p className="text-white font-bold text-lg">{formatCents(listing.price_cents)}</p>
           )}
-        </div>
-
-        {/* Class name */}
-        <h3 className="font-semibold text-white text-base leading-snug">{listing.class_name}</h3>
-
-        {/* Badges */}
-        <div className="flex flex-wrap gap-2">
-          <span className="text-xs text-white/60 border border-white/20 px-2 py-0.5">{classTypeLabel}</span>
-          <span className="text-xs text-white/60 border border-white/20 px-2 py-0.5">{skillLabel}</span>
-        </div>
-
-        {/* Details */}
-        <div className="space-y-1.5 text-sm text-white/40">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
-            <span>{dateLabel}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-            <span>{timeLabel}{listing.duration_minutes ? ` · ${listing.duration_minutes} min` : ''}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="truncate">
-              {listing.neighborhood ? `${listing.neighborhood} · ` : ''}{listing.address}
-            </span>
+          <div className="mt-1">
+            <StarRating stars={stats.stars} total={stats.total} />
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-1">
-          <StarRating stars={stats.stars} total={stats.total} />
-          <span className="text-xs text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">
-            View →
-          </span>
-        </div>
+        {/* Arrow */}
+        <div className="flex-shrink-0 text-white/20 group-hover:text-white/60 transition-colors text-lg">→</div>
       </div>
     </Link>
   )

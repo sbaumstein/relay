@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-black">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#111]">
       <a href="/" className="text-2xl font-bold mb-8">Relay</a>
       <Card className="w-full max-w-md">
         <CardHeader>

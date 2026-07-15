@@ -2,15 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { CLASS_TYPES, NEIGHBORHOODS } from '@/types'
+import { CLASS_TYPES } from '@/types'
 import type { ClassType } from '@/types'
 
 export function ListingFilters() {
@@ -18,7 +10,7 @@ export function ListingFilters() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const createQueryString = useCallback(
+  const setFilter = useCallback(
     (name: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString())
       if (value === 'all' || value === '') {
@@ -26,66 +18,38 @@ export function ListingFilters() {
       } else {
         params.set(name, value)
       }
-      return params.toString()
+      router.push(pathname + (params.toString() ? '?' + params.toString() : ''))
     },
-    [searchParams]
+    [searchParams, router, pathname]
   )
 
   const classType = searchParams.get('class_type') ?? ''
-  const isFree = searchParams.get('is_free') ?? ''
-  const neighborhood = searchParams.get('neighborhood') ?? ''
-
-  const hasFilters = classType || neighborhood
 
   return (
-    <div className="flex flex-wrap gap-3 items-center">
-      <Select
-        value={classType || 'all'}
-        onValueChange={(val) => {
-          router.push(pathname + '?' + createQueryString('class_type', val))
-        }}
+    <div className="flex flex-wrap gap-2">
+      <button
+        onClick={() => setFilter('class_type', 'all')}
+        className={`text-xs px-4 py-1.5 border transition-colors ${
+          !classType
+            ? 'border-white text-white'
+            : 'border-white/20 text-white/40 hover:border-white/40 hover:text-white/60'
+        }`}
       >
-        <SelectTrigger className="w-36 bg-white">
-          <SelectValue placeholder="Class type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All types</SelectItem>
-          {CLASS_TYPES.map((t) => (
-            <SelectItem key={t.value} value={t.value}>
-              {t.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={neighborhood || 'all'}
-        onValueChange={(val) => {
-          router.push(pathname + '?' + createQueryString('neighborhood', val))
-        }}
-      >
-        <SelectTrigger className="w-44 bg-white">
-          <SelectValue placeholder="Neighborhood" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All neighborhoods</SelectItem>
-          {NEIGHBORHOODS.map((n) => (
-            <SelectItem key={n} value={n}>
-              {n}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {hasFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push(pathname)}
+        All
+      </button>
+      {CLASS_TYPES.map((t) => (
+        <button
+          key={t.value}
+          onClick={() => setFilter('class_type', t.value)}
+          className={`text-xs px-4 py-1.5 border transition-colors ${
+            classType === t.value
+              ? 'border-white text-white'
+              : 'border-white/20 text-white/40 hover:border-white/40 hover:text-white/60'
+          }`}
         >
-          Clear filters
-        </Button>
-      )}
+          {t.label}
+        </button>
+      ))}
     </div>
   )
 }

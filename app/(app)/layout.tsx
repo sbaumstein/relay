@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen" style={{ background: '#111' }}>
       <Navbar user={profile} />
       <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
     </div>
