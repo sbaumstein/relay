@@ -3,8 +3,6 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Dumbbell } from 'lucide-react'
 import type { Profile } from '@/types'
 
 interface NavbarProps {
@@ -23,17 +21,16 @@ export function Navbar({ user }: NavbarProps) {
   }
 
   return (
-    <nav className="border-b bg-white sticky top-0 z-10">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/browse" className="flex items-center gap-2 font-bold text-lg">
-          <Dumbbell className="h-5 w-5" />
-          Workout Exchange
+    <nav className="sticky top-0 z-10 border-b border-white/10 bg-black/80 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <Link href="/browse" className="text-lg font-bold tracking-widest uppercase text-white">
+          Relay
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-8">
           <Link
             href="/browse"
-            className={`text-sm ${pathname === '/browse' ? 'font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`text-sm tracking-wide transition-colors ${pathname === '/browse' ? 'text-white' : 'text-white/50 hover:text-white'}`}
           >
             Browse
           </Link>
@@ -42,24 +39,30 @@ export function Navbar({ user }: NavbarProps) {
             <>
               <Link
                 href="/dashboard"
-                className={`text-sm ${pathname === '/dashboard' ? 'font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`text-sm tracking-wide transition-colors ${pathname === '/dashboard' ? 'text-white' : 'text-white/50 hover:text-white'}`}
               >
                 Profile
               </Link>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <button
+                onClick={handleSignOut}
+                className="text-sm tracking-wide text-white/50 hover:text-white transition-colors"
+              >
                 Sign out
-              </Button>
+              </button>
             </>
           )}
 
           {!user && (
             <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Sign in</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link href="/signup">Sign up</Link>
-              </Button>
+              <Link href="/login" className="text-sm tracking-wide text-white/50 hover:text-white transition-colors">
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="text-sm tracking-wide border border-white/40 hover:border-white px-4 py-1.5 text-white transition-colors"
+              >
+                Get started
+              </Link>
             </>
           )}
         </div>

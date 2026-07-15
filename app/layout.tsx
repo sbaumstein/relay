@@ -9,9 +9,8 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-  title: 'Workout Exchange — Trade Your Class Spot',
-  description:
-    'Can\'t make it to your workout class? List your spot so someone else can claim it. Avoid cancellation fees and help others get into sold-out classes.',
+  title: 'Relay — Pass Your Spot',
+  description: 'Can\'t make it to class? Pass your spot to someone who can.',
 }
 
 export default function RootLayout({
@@ -20,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={`${geist.variable} font-sans antialiased`}>
         {children}
         <Toaster />

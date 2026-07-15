@@ -73,9 +73,9 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Available Class Spots</h1>
-        <p className="text-muted-foreground mt-1">
-          Claim a workout class spot from someone who can&apos;t make it
+        <h1 className="text-2xl font-bold tracking-tight text-white">Available Spots</h1>
+        <p className="text-white/40 mt-1 text-sm tracking-wide">
+          Claim a class from someone who can&apos;t make it
         </p>
       </div>
 
@@ -89,7 +89,7 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
         fallback={
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-52 bg-white rounded-lg animate-pulse border" />
+              <div key={i} className="h-52 bg-white/5 animate-pulse border border-white/10" />
             ))}
           </div>
         }
@@ -99,7 +99,7 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
 
       <Link
         href="/listings/new"
-        className="fixed bottom-8 right-8 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-50"
+        className="fixed bottom-8 right-8 h-14 w-14 bg-white text-black shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-50"
       >
         <Plus className="h-6 w-6" />
       </Link>
