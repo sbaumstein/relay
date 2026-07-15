@@ -1,18 +1,12 @@
 import Link from 'next/link'
+import { VideoBackground } from '@/components/ui/VideoBackground'
 
 export default function HomePage() {
   return (
     <div className="relative min-h-screen bg-black text-white overflow-hidden">
 
-      {/* Background video */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover opacity-40"
-        src="https://videos.pexels.com/video-files/4384679/4384679-hd_1920_1080_25fps.mp4"
-      />
+      {/* Background video cycling */}
+      <VideoBackground />
 
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
