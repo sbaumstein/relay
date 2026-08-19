@@ -7,6 +7,7 @@ import { StarRating } from '@/components/ui/StarRating'
 import type { Listing, Claim, Profile } from '@/types'
 import { Plus } from 'lucide-react'
 import { CheckInCard } from '@/components/claims/CheckInCard'
+import { DisputeResponseCard } from '@/components/claims/DisputeResponseCard'
 import { expireStaleListings } from '@/lib/expireListings'
 
 function StatusPill({ status }: { status: string }) {
@@ -42,11 +43,16 @@ export default async function DashboardPage() {
   // Mark any of this user's past listings as expired before rendering
   await expireStaleListings(supabase, user.id)
 
-  const [{ data: profile }, { data: myListings }, { data: myClaims }, { data: sellerClaims }] = await Promise.all([
+  const [{ data: profile }, { data: myListings }, { data: myClaims }, { data: sellerClaims }, { data: disputesAgainstMe }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase.from('listings').select('*').eq('seller_id', user.id).order('created_at', { ascending: false }),
     supabase.from('claims').select('*, listing:listings(*, duration_minutes), checkin_responded_at, checkin_response').eq('claimer_id', user.id).order('created_at', { ascending: false }),
     supabase.from('claims').select('status').eq('seller_id', user.id),
+    supabase.from('claims')
+      .select('*, listing:listings(class_name, studio_name)')
+      .eq('seller_id', user.id)
+      .eq('status', 'disputed')
+      .order('disputed_at', { ascending: true }),
   ])
 
   const p = profile as Profile | null
@@ -76,6 +82,30 @@ export default async function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Disputes filed against me — highest priority, time-sensitive */}
+      {disputesAgainstMe && disputesAgainstMe.length > 0 && (
+        <div className="mb-10">
+          <p className="text-xs text-orange-400 uppercase tracking-widest mb-4">
+            Action needed ({disputesAgainstMe.length})
+          </p>
+          <div className="space-y-3">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {disputesAgainstMe.map((d: any) => (
+              <DisputeResponseCard
+                key={d.id}
+                claimId={d.id}
+                className={d.listing?.class_name ?? 'your listing'}
+                reason={d.dispute_reason}
+                notes={d.dispute_notes}
+                buyerEvidence={d.dispute_evidence_urls ?? []}
+                deadline={d.seller_response_deadline}
+                respondedAt={d.seller_responded_at}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* My Listings */}
       <div className="mb-10">

@@ -60,12 +60,60 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
         </div>
       </div>
 
-      <div className="bg-white/5 p-3 text-sm">
-        <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Buyer's reason</p>
-        <p className="text-white/80">{d.dispute_reason ?? '—'}</p>
+      <div className="bg-white/5 p-3 text-sm space-y-2">
+        <div>
+          <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Buyer&apos;s reason</p>
+          <p className="text-white/80">{d.dispute_reason ?? '—'}</p>
+        </div>
+        {d.dispute_notes && (
+          <div>
+            <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Buyer&apos;s notes</p>
+            <p className="text-white/80 whitespace-pre-wrap">{d.dispute_notes}</p>
+          </div>
+        )}
+        {(d.dispute_evidence_urls ?? []).length > 0 && (
+          <div>
+            <p className="text-white/40 text-xs uppercase tracking-widest mb-1">Buyer&apos;s attachments</p>
+            <div className="flex flex-wrap gap-3">
+              {d.dispute_evidence_urls.map((url: string, i: number) => (
+                <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline text-xs">
+                  Attachment {i + 1}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         {d.disputed_at && (
-          <p className="text-white/30 text-xs mt-1">
+          <p className="text-white/30 text-xs">
             Filed {new Date(d.disputed_at).toLocaleString()}
+          </p>
+        )}
+      </div>
+
+      {/* Seller rebuttal */}
+      <div className="bg-white/5 p-3 text-sm space-y-2">
+        <p className="text-white/40 text-xs uppercase tracking-widest">Seller&apos;s response</p>
+        {d.seller_responded_at ? (
+          <>
+            <p className="text-white/80 whitespace-pre-wrap">{d.seller_response}</p>
+            {(d.seller_response_urls ?? []).length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                {d.seller_response_urls.map((url: string, i: number) => (
+                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline text-xs">
+                    Attachment {i + 1}
+                  </a>
+                ))}
+              </div>
+            )}
+            <p className="text-white/30 text-xs">
+              Responded {new Date(d.seller_responded_at).toLocaleString()}
+            </p>
+          </>
+        ) : d.seller_response_deadline && new Date(d.seller_response_deadline) < new Date() ? (
+          <p className="text-red-400 text-xs">No response — 24h window closed {new Date(d.seller_response_deadline).toLocaleString()}</p>
+        ) : (
+          <p className="text-yellow-400 text-xs">
+            Awaiting response{d.seller_response_deadline ? ` — due ${new Date(d.seller_response_deadline).toLocaleString()}` : ''}
           </p>
         )}
       </div>

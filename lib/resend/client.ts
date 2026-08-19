@@ -105,3 +105,42 @@ export async function sendListingPostedEmail({
     `,
   })
 }
+
+export const SELLER_RESPONSE_HOURS = 24
+
+export async function sendDisputeFiledEmail({
+  sellerEmail,
+  sellerName,
+  className,
+  studioName,
+  reason,
+  notes,
+  deadline,
+}: {
+  sellerEmail: string
+  sellerName: string | null
+  className: string
+  studioName: string
+  reason: string
+  notes: string | null
+  deadline: Date
+  claimId: string
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  if (!isEmailAllowed(sellerEmail)) return
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL!,
+    to: sellerEmail,
+    subject: `Action needed: a dispute was filed on ${className}`,
+    html: `
+      <h2>A dispute was filed against your listing</h2>
+      <p>Hi ${sellerName ?? 'there'},</p>
+      <p>The buyer of your spot for <strong>${className}</strong>${studioName ? ` at <strong>${studioName}</strong>` : ''} has filed a dispute.</p>
+      <p><strong>Their reason:</strong> ${reason}</p>
+      ${notes ? `<p><strong>Their notes:</strong> ${notes}</p>` : ''}
+      <p>You have <strong>${SELLER_RESPONSE_HOURS} hours</strong> to respond with your side and any supporting screenshots.
+      If we don't hear from you by <strong>${deadline.toLocaleString()}</strong>, we'll decide based on the buyer's evidence alone.</p>
+      <p><a href="${appUrl}/dashboard">Respond to this dispute</a></p>
+    `,
+  })
+}

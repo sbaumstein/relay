@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { AlertCircle } from 'lucide-react'
+import { EvidenceUpload } from '@/components/claims/EvidenceUpload'
 
 const DISPUTE_REASONS = [
   'The booking confirmation was fake or invalid',
@@ -22,6 +23,8 @@ export default function DisputePage() {
   const router = useRouter()
   const [selected, setSelected] = useState('')
   const [details, setDetails] = useState('')
+  const [notes, setNotes] = useState('')
+  const [evidenceUrls, setEvidenceUrls] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
@@ -35,7 +38,7 @@ export default function DisputePage() {
     const res = await fetch(`/api/claims/${id}/dispute`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify({ reason, notes, evidence_urls: evidenceUrls }),
     })
 
     const data = await res.json()
@@ -97,6 +100,29 @@ export default function DisputePage() {
           />
         </div>
       )}
+
+      <div className="space-y-2 mb-6">
+        <Label htmlFor="notes">Additional notes <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Anything else that helps us understand what happened — timeline, messages exchanged, etc."
+          rows={4}
+        />
+      </div>
+
+      <div className="space-y-2 mb-6">
+        <Label>Supporting screenshots <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <p className="text-xs text-muted-foreground">
+          Text messages, booking pages, emails — anything backing up your account.
+        </p>
+        <EvidenceUpload value={evidenceUrls} onChange={setEvidenceUrls} prefix={`buyer-${id}`} disabled={loading} />
+      </div>
+
+      <p className="text-xs text-muted-foreground mb-6">
+        The seller will be notified and has 24 hours to respond with their side before we decide.
+      </p>
 
       <div className="flex gap-3">
         <Button
