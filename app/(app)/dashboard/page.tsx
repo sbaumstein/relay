@@ -10,22 +10,25 @@ import { CheckInCard } from '@/components/claims/CheckInCard'
 import { expireStaleListings } from '@/lib/expireListings'
 
 function StatusPill({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    available:            'text-emerald-400 border-emerald-400/30',
-    claimed:              'text-blue-400 border-blue-400/30',
-    completed:            'text-blue-400 border-blue-400/30',
-    auto_released:        'text-blue-400 border-blue-400/30',
-    expired:              'text-white/60 border-white/20',
-    cancelled:            'text-red-400 border-red-400/30',
-    disputed:             'text-red-400 border-red-400/30',
-    needs_review:         'text-orange-400 border-orange-400/30',
-    pending_confirmation: 'text-yellow-400 border-yellow-400/30',
-    pending_payment:      'text-yellow-400 border-yellow-400/30',
-    refunded:             'text-white/60 border-white/20',
+  const styles: Record<string, { color: string; label: string }> = {
+    available:            { color: 'text-emerald-400 border-emerald-400/30', label: 'Available' },
+    pending_payment:      { color: 'text-yellow-400 border-yellow-400/30',  label: 'Pending payment' },
+    pending_confirmation: { color: 'text-yellow-400 border-yellow-400/30',  label: 'Pending' },
+    claimed:              { color: 'text-blue-400 border-blue-400/30',      label: 'Claimed' },
+    completed:            { color: 'text-emerald-400 border-emerald-400/30',label: 'Completed' },
+    auto_released:        { color: 'text-emerald-400 border-emerald-400/30',label: 'Completed' },
+    disputed:             { color: 'text-orange-400 border-orange-400/30',  label: 'Under dispute' },
+    dispute_won:          { color: 'text-emerald-400 border-emerald-400/30',label: 'Dispute won' },
+    dispute_lost:         { color: 'text-red-400 border-red-400/30',        label: 'Dispute lost' },
+    needs_review:         { color: 'text-orange-400 border-orange-400/30',  label: 'Under review' },
+    expired:              { color: 'text-white/40 border-white/10',         label: 'Expired' },
+    cancelled:            { color: 'text-red-400 border-red-400/30',        label: 'Cancelled' },
+    refunded:             { color: 'text-white/40 border-white/10',         label: 'Refunded' },
   }
+  const s = styles[status] ?? { color: 'text-white/70 border-white/20', label: status.replace(/_/g, ' ') }
   return (
-    <span className={`text-xs border px-2 py-0.5 ${colors[status] ?? 'text-white/70 border-white/20'}`}>
-      {status.replace(/_/g, ' ')}
+    <span className={`text-xs border px-2 py-0.5 ${s.color}`}>
+      {s.label}
     </span>
   )
 }

@@ -54,12 +54,16 @@ export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels'
 
 export type ListingStatus = 'available' | 'claimed' | 'expired' | 'cancelled'
 export type ClaimStatus =
-  | 'pending_payment'
-  | 'pending_confirmation'
-  | 'disputed'
+  | 'pending_payment'       // Stripe payment not yet captured
+  | 'pending_confirmation'  // Claimed, seller needs to confirm booking transfer
+  | 'claimed'               // Seller confirmed booking transferred to buyer
+  | 'completed'             // Buyer attended, escrow released to seller
+  | 'disputed'              // Issue reported, admin reviewing
+  | 'dispute_won'           // Admin ruled for buyer — refunded
+  | 'dispute_lost'          // Admin ruled for seller — seller keeps payment
   | 'auto_released'
-  | 'completed'
   | 'refunded'
+  | 'needs_review'
   | 'failed'
 
 export interface Profile {

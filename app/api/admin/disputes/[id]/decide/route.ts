@@ -33,7 +33,6 @@ export async function POST(
   if (!claim) return NextResponse.json({ error: 'Dispute not found' }, { status: 404 })
 
   if (favor_of === 'buyer') {
-    // Refund buyer — Stripe refund if applicable
     if (claim.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
       await stripe.refunds.create({
         payment_intent: claim.stripe_payment_intent_id,
@@ -41,7 +40,7 @@ export async function POST(
     }
 
     await service.from('claims').update({
-      status: 'refunded',
+      status: 'dispute_won',
       updated_at: new Date().toISOString(),
     }).eq('id', id)
 
@@ -52,14 +51,9 @@ export async function POST(
     }).eq('id', claim.listing_id)
 
   } else {
-    // Release escrow to seller
-    if (claim.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
-      // In a real integration you'd initiate a Stripe Transfer here
-      // For now just mark it completed — payout handled manually or via webhook
-    }
-
+    // Release escrow to seller — Stripe Transfer would go here when Stripe is active
     await service.from('claims').update({
-      status: 'completed',
+      status: 'dispute_lost',
       updated_at: new Date().toISOString(),
     }).eq('id', id)
   }

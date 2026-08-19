@@ -25,7 +25,7 @@ export async function POST(
 
   if (!claim) return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
 
-  if (claim.status !== 'pending_confirmation') {
+  if (claim.status !== 'pending_confirmation' && claim.status !== 'claimed') {
     return NextResponse.json({ error: 'Check-in not available for this claim' }, { status: 409 })
   }
 

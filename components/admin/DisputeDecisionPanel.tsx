@@ -76,14 +76,14 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
           disabled={!!loading}
           className="flex-1 py-2.5 text-sm font-medium border border-emerald-400/50 text-emerald-400 hover:bg-emerald-400/10 transition-colors disabled:opacity-40"
         >
-          {loading === 'buyer' ? 'Processing…' : `Refund buyer · ${formatCents(d.amount_cents)}`}
+          {loading === 'buyer' ? 'Processing…' : `Dispute won — refund buyer · ${formatCents(d.amount_cents)}`}
         </button>
         <button
           onClick={() => decide('seller')}
           disabled={!!loading}
           className="flex-1 py-2.5 text-sm font-medium border border-blue-400/50 text-blue-400 hover:bg-blue-400/10 transition-colors disabled:opacity-40"
         >
-          {loading === 'seller' ? 'Processing…' : `Release to seller · ${formatCents(d.seller_payout_cents)}`}
+          {loading === 'seller' ? 'Processing…' : `Dispute lost — pay seller · ${formatCents(d.seller_payout_cents)}`}
         </button>
       </div>
     </div>
