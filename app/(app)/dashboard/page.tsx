@@ -7,6 +7,7 @@ import { StarRating } from '@/components/ui/StarRating'
 import type { Listing, Claim, Profile } from '@/types'
 import { Plus } from 'lucide-react'
 import { CheckInCard } from '@/components/claims/CheckInCard'
+import { expireStaleListings } from '@/lib/expireListings'
 
 function StatusPill({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -34,6 +35,9 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/login?redirectTo=/dashboard')
+
+  // Mark any of this user's past listings as expired before rendering
+  await expireStaleListings(supabase, user.id)
 
   const [{ data: profile }, { data: myListings }, { data: myClaims }, { data: sellerClaims }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),

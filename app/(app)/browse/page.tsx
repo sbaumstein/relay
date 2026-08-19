@@ -9,6 +9,7 @@ import { ListingFilters } from '@/components/listings/ListingFilters'
 import { MapView } from '@/components/listings/MapView'
 import { getSellerStats } from '@/types'
 import type { ClassType, Listing } from '@/types'
+import { expireStaleListings } from '@/lib/expireListings'
 
 interface BrowsePageProps {
   searchParams: Promise<{
@@ -20,6 +21,8 @@ interface BrowsePageProps {
 async function BrowseContent({ searchParams }: BrowsePageProps) {
   const params = await searchParams
   const supabase = await createClient()
+
+  await expireStaleListings(supabase)
 
   let query = supabase
     .from('listings')
