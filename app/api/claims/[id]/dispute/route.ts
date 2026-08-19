@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { stripe } from '@/lib/stripe/client'
 
 export async function POST(
   request: NextRequest,
@@ -40,19 +39,8 @@ export async function POST(
     })
     .eq('id', id)
 
-  // Refund via Stripe if payment was made
-  if (claim.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
-    await stripe.refunds.create({
-      payment_intent: claim.stripe_payment_intent_id,
-      reason: 'fraudulent',
-    }).catch(console.error)
-  }
-
-  // Reopen listing so someone else can claim it
-  await serviceSupabase
-    .from('listings')
-    .update({ status: 'available', updated_at: new Date().toISOString() })
-    .eq('id', claim.listing_id)
+  // Listing stays 'claimed' — funds remain in escrow until an admin rules on the
+  // dispute, so it must not reappear in browse.
 
   return NextResponse.json({ success: true })
 }
