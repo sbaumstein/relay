@@ -28,7 +28,7 @@ export async function POST(
     return NextResponse.json({ error: 'This claim cannot be disputed at this stage' }, { status: 409 })
   }
 
-  const serviceSupabase = await createServiceClient()
+  const serviceSupabase = createServiceClient()
 
   await serviceSupabase
     .from('claims')

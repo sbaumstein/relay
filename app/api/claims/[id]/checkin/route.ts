@@ -39,7 +39,7 @@ export async function POST(
     return NextResponse.json({ error: 'Class has not ended yet' }, { status: 409 })
   }
 
-  const serviceSupabase = await createServiceClient()
+  const serviceSupabase = createServiceClient()
 
   await serviceSupabase
     .from('claims')

@@ -21,7 +21,7 @@ export async function POST(
     return NextResponse.json({ error: 'favor_of must be buyer or seller' }, { status: 400 })
   }
 
-  const service = await createServiceClient()
+  const service = createServiceClient()
 
   const { data: claim } = await service
     .from('claims')

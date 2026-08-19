@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   const classTime = new Date(listing.class_datetime)
   const expiresAt = new Date(classTime.getTime() + holdHours * 60 * 60 * 1000)
 
-  const serviceSupabase = await createServiceClient()
+  const serviceSupabase = createServiceClient()
 
   // Atomically reserve the listing — only succeeds if status is still 'available'
   const { data: reservedRows } = await serviceSupabase

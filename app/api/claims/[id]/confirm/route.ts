@@ -23,7 +23,7 @@ export async function POST(
     return NextResponse.json({ error: 'Cannot confirm at this stage' }, { status: 409 })
   }
 
-  const service = await createServiceClient()
+  const service = createServiceClient()
   await service.from('claims').update({
     status: 'claimed',
     updated_at: new Date().toISOString(),

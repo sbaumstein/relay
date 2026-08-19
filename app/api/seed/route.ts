@@ -237,7 +237,7 @@ export async function POST() {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
   }
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
 
   // Use the first real auth user so FK constraint on profiles is satisfied
   const { data: users, error: usersError } = await supabase.auth.admin.listUsers({ perPage: 1 })
@@ -271,7 +271,7 @@ export async function DELETE() {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
   }
-  const supabase = await createServiceClient()
+  const supabase = createServiceClient()
   const { data: users } = await supabase.auth.admin.listUsers({ perPage: 1 })
   const seedUserId = users?.users?.[0]?.id
   if (!seedUserId) return NextResponse.json({ error: 'No users found' }, { status: 400 })

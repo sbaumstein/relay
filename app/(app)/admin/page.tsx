@@ -14,7 +14,7 @@ export default async function AdminPage() {
 
   if (!user || user.email !== ADMIN_EMAIL) redirect('/browse')
 
-  const service = await createServiceClient()
+  const service = createServiceClient()
 
   const [
     { data: profiles },
