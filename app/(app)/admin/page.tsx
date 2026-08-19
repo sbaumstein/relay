@@ -19,15 +19,23 @@ export default async function AdminPage() {
   const [
     { data: profiles },
     { data: allClaims },
-    { data: disputes },
+    { data: rawDisputes },
   ] = await Promise.all([
     service.from('profiles').select('*').order('created_at', { ascending: false }),
     service.from('claims').select('*, listing:listings(class_name, studio_name, class_datetime, price_cents)').order('created_at', { ascending: false }),
     service.from('claims')
-      .select('*, listing:listings(class_name, studio_name, class_datetime, price_cents, address), claimer:profiles!claimer_id(email, full_name), seller:profiles!seller_id(email, full_name)')
+      .select('*, listing:listings(class_name, studio_name, class_datetime, price_cents, address)')
       .eq('status', 'disputed')
       .order('disputed_at', { ascending: true }),
   ])
+
+  // Hydrate claimer/seller onto disputes from the profiles we already fetched
+  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+  const disputes = (rawDisputes ?? []).map(d => ({
+    ...d,
+    claimer: profileMap[d.claimer_id] ?? null,
+    seller: profileMap[d.seller_id] ?? null,
+  }))
 
   // Escrow summary — claims where money is actively held
   const escrowStatuses = ['pending_payment', 'pending_confirmation', 'disputed']
