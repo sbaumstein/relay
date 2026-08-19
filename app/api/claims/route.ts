@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
 
     if (claimError) {
       await stripe.paymentIntents.cancel(paymentIntent.id).catch(console.error)
+      await serviceSupabase.from('listings').update({ status: 'available', updated_at: new Date().toISOString() }).eq('id', listing_id)
       return NextResponse.json({ error: claimError.message }, { status: 500 })
     }
 
@@ -132,7 +133,10 @@ export async function POST(request: NextRequest) {
     .select('*')
     .single()
 
-  if (claimError) return NextResponse.json({ error: claimError.message }, { status: 500 })
+  if (claimError) {
+    await serviceSupabase.from('listings').update({ status: 'available', updated_at: new Date().toISOString() }).eq('id', listing_id)
+    return NextResponse.json({ error: claimError.message }, { status: 500 })
+  }
 
   const { data: claimerProfile } = await supabase
     .from('profiles')
