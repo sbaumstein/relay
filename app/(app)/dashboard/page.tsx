@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   const [{ data: profile }, { data: myListings }, { data: myClaims }, { data: sellerClaims }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase.from('listings').select('*').eq('seller_id', user.id).order('created_at', { ascending: false }),
-    supabase.from('claims').select('*, listing:listings(*, duration_minutes)').eq('claimer_id', user.id).order('created_at', { ascending: false }),
+    supabase.from('claims').select('*, listing:listings(*, duration_minutes), checkin_responded_at, checkin_response').eq('claimer_id', user.id).order('created_at', { ascending: false }),
     supabase.from('claims').select('status').eq('seller_id', user.id),
   ])
 
@@ -128,7 +128,9 @@ export default async function DashboardPage() {
               const now = new Date()
               const isPending = c.status === 'pending_confirmation'
               const classInFuture = classDate > now
-              const needsCheckin = isPending && classEnd < now && !classInFuture
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const alreadyResponded = !!(c as any).checkin_responded_at
+              const needsCheckin = isPending && classEnd < now && !classInFuture && !alreadyResponded
               return (
                 <div key={c.id} className="py-3.5 px-1 border-b border-white/20">
                   <Link href={`/listings/${l.id}`} className="flex items-center gap-4 hover:bg-white/6 transition-colors group">
@@ -155,6 +157,10 @@ export default async function DashboardPage() {
                     <div className="mt-2 ml-20">
                       <CheckInCard claimId={c.id} className={l.class_name} />
                     </div>
+                  )}
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {alreadyResponded && isPending && (c as any).checkin_response === true && (
+                    <p className="text-xs text-emerald-400 mt-1 ml-20">Checked in — escrow releasing to seller</p>
                   )}
                 </div>
               )
