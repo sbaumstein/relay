@@ -26,6 +26,15 @@ export async function POST(request: NextRequest) {
   if (listing.status !== 'available') return NextResponse.json({ error: 'This listing is no longer available' }, { status: 409 })
   if (listing.seller_id === user.id) return NextResponse.json({ error: 'You cannot claim your own listing' }, { status: 400 })
 
+  // Prevent the same user from holding multiple active claims
+  const { data: existingClaim } = await supabase
+    .from('claims')
+    .select('id')
+    .eq('claimer_id', user.id)
+    .in('status', ['pending_payment', 'pending_confirmation', 'claimed'])
+    .maybeSingle()
+  if (existingClaim) return NextResponse.json({ error: 'You already have an active claim' }, { status: 409 })
+
   // Determine the cancellation fee that goes to seller on no-show
   const studio = listing.studio
   const cancellationFeeCents = studio
@@ -51,6 +60,18 @@ export async function POST(request: NextRequest) {
   const expiresAt = new Date(classTime.getTime() + holdHours * 60 * 60 * 1000)
 
   const serviceSupabase = await createServiceClient()
+
+  // Atomically reserve the listing — only succeeds if status is still 'available'
+  const { data: reservedRows } = await serviceSupabase
+    .from('listings')
+    .update({ status: 'claimed', updated_at: new Date().toISOString() })
+    .eq('id', listing_id)
+    .eq('status', 'available')
+    .select('id')
+
+  if (!reservedRows || reservedRows.length === 0) {
+    return NextResponse.json({ error: 'This listing was just claimed by someone else' }, { status: 409 })
+  }
 
   // If Stripe is configured, charge the full class price into escrow
   if (process.env.STRIPE_SECRET_KEY) {
@@ -112,11 +133,6 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (claimError) return NextResponse.json({ error: claimError.message }, { status: 500 })
-
-  await serviceSupabase
-    .from('listings')
-    .update({ status: 'claimed', updated_at: new Date().toISOString() })
-    .eq('id', listing_id)
 
   const { data: claimerProfile } = await supabase
     .from('profiles')
