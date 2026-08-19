@@ -54,7 +54,7 @@ export default function DisputePage() {
     <div className="max-w-lg mx-auto">
       <h1 className="text-2xl font-bold mb-2">File a Dispute</h1>
       <p className="text-muted-foreground mb-6">
-        Disputes must be filed before the class starts. If valid, you'll receive a full refund.
+        Tell us what went wrong. We'll review and resolve it as quickly as possible.
       </p>
 
       <Card className="border-amber-200 bg-amber-50 mb-6">

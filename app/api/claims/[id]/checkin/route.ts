@@ -46,8 +46,10 @@ export async function POST(
     .update({
       checkin_response: attended,
       checkin_responded_at: new Date().toISOString(),
-      // No-show → hold for review; attended → stays pending_confirmation for auto-release
-      status: attended ? 'pending_confirmation' : 'needs_review',
+      // Attended → completed (seller payout); no-show → disputed (admin reviews)
+      status: attended ? 'completed' : 'disputed',
+      disputed_at: attended ? null : new Date().toISOString(),
+      dispute_reason: attended ? null : 'Buyer reported no-show via check-in',
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

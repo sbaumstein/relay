@@ -25,7 +25,7 @@ export default async function AdminPage() {
     service.from('claims').select('*, listing:listings(class_name, studio_name, class_datetime, price_cents)').order('created_at', { ascending: false }),
     service.from('claims')
       .select('*, listing:listings(class_name, studio_name, class_datetime, price_cents, address)')
-      .eq('status', 'disputed')
+      .in('status', ['disputed', 'needs_review'])
       .order('disputed_at', { ascending: true }),
   ])
 

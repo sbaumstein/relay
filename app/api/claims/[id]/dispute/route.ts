@@ -28,21 +28,6 @@ export async function POST(
     return NextResponse.json({ error: 'This claim cannot be disputed at this stage' }, { status: 409 })
   }
 
-  // Must dispute before class time
-  const listing = await supabase
-    .from('listings')
-    .select('class_datetime')
-    .eq('id', claim.listing_id)
-    .single()
-
-  const classTime = new Date(listing.data?.class_datetime ?? 0)
-  if (new Date() > classTime) {
-    return NextResponse.json(
-      { error: 'Disputes must be filed before the class starts' },
-      { status: 409 }
-    )
-  }
-
   const serviceSupabase = await createServiceClient()
 
   await serviceSupabase
