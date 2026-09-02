@@ -17,12 +17,22 @@ export async function PATCH(
 
   const service = createServiceClient()
 
-  const { data: target } = await service
+  // Select only columns guaranteed by the base schema. Selecting a column that
+  // doesn't exist yet (e.g. before the admin migration is applied) makes the
+  // whole query error, which previously surfaced as a misleading "User not found".
+  const { data: target, error: lookupError } = await service
     .from('profiles')
-    .select('id, email, is_banned, credibility_boost')
+    .select('id, email')
     .eq('id', id)
     .single()
 
+  if (lookupError) {
+    console.error('[admin/users] lookup failed', lookupError)
+    return NextResponse.json(
+      { error: `Could not load user: ${lookupError.message}` },
+      { status: 500 }
+    )
+  }
   if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 })
   if (target.email === ADMIN_EMAIL && (action === 'ban' || action === 'set_boost')) {
     return NextResponse.json({ error: 'You cannot moderate the admin account' }, { status: 400 })
