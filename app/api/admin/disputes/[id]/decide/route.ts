@@ -52,9 +52,10 @@ export async function POST(
       )
     }
 
-    // Reopen listing so someone else can claim it
+    // The class was disputed, so the spot is not resellable — retire the listing
+    // rather than returning it to browse.
     await service.from('listings').update({
-      status: 'available',
+      status: 'cancelled',
       updated_at: new Date().toISOString(),
     }).eq('id', claim.listing_id)
 

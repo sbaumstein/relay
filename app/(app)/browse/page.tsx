@@ -26,7 +26,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
 
   let query = supabase
     .from('listings')
-    .select('*, seller:profiles!seller_id(id, full_name, email)')
+    .select('*, seller:profiles!seller_id(id, full_name, email, is_banned)')
     .eq('status', 'available')
     .gte('class_datetime', new Date().toISOString())
     .order('class_datetime', { ascending: true })
@@ -35,9 +35,14 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
   if (params.class_type) query = query.eq('class_type', params.class_type as ClassType)
   if (params.neighborhood) query = query.eq('neighborhood', params.neighborhood)
 
-  const { data: listings } = await query
+  const { data: rawListings } = await query
 
-  if (!listings || listings.length === 0) {
+  // Banned sellers' spots must not be claimable, so keep them out of browse.
+  const listings = (rawListings ?? []).filter(
+    (l) => (l.seller as { is_banned?: boolean } | null)?.is_banned !== true
+  )
+
+  if (listings.length === 0) {
     return (
       <div className="flex gap-6" style={{ height: 'calc(100vh - 180px)' }}>
         <div className="flex-1 flex items-center justify-center text-white/60 text-sm border-t border-white/20">

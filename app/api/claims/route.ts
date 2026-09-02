@@ -30,6 +30,13 @@ export async function POST(request: NextRequest) {
   if (listing.status !== 'available') return NextResponse.json({ error: 'This listing is no longer available' }, { status: 409 })
   if (listing.seller_id === user.id) return NextResponse.json({ error: 'You cannot claim your own listing' }, { status: 400 })
 
+  if (await isBanned(listing.seller_id)) {
+    return NextResponse.json(
+      { error: 'This listing is no longer available' },
+      { status: 409 }
+    )
+  }
+
   // Prevent the same user from holding multiple active claims
   const { data: existingClaim } = await supabase
     .from('claims')
