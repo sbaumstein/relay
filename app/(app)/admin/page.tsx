@@ -4,15 +4,13 @@ import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getSellerStats } from '@/types'
-import { DisputeDecisionPanel } from '@/components/admin/DisputeDecisionPanel'
-
-const ADMIN_EMAIL = 'sambaumstein@gmail.com'
+import { AdminDisputeList } from '@/components/admin/AdminDisputeList'
+import { AdminUserTable, type AdminUserRow } from '@/components/admin/AdminUserTable'
+import { getAdminUser } from '@/lib/admin/auth'
 
 export default async function AdminPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user || user.email !== ADMIN_EMAIL) redirect('/browse')
+  const admin = await getAdminUser()
+  if (!admin) redirect('/browse')
 
   const service = createServiceClient()
 
@@ -47,16 +45,35 @@ export default async function AdminPage() {
 
   // Build per-user stats
   const claimsArr = allClaims ?? []
-  const userStats = (profiles ?? []).map(p => {
+  const userRows: AdminUserRow[] = (profiles ?? []).map(p => {
     const asSellerAll = claimsArr.filter(c => c.seller_id === p.id)
     const asSellerCompleted = asSellerAll.filter(c => c.status === 'completed' || c.status === 'auto_released').length
-    const stats = getSellerStats(asSellerAll.length, asSellerCompleted)
+    const boost = p.credibility_boost ?? 0
+    const base = getSellerStats(asSellerAll.length, asSellerCompleted)
+    const stats = getSellerStats(asSellerAll.length, asSellerCompleted, boost)
 
     const asBuyer = claimsArr.filter(c => c.claimer_id === p.id)
     const buyerCompleted = asBuyer.filter(c => c.status === 'completed' || c.status === 'auto_released').length
     const buyerDisputed = asBuyer.filter(c => c.status === 'disputed').length
 
-    return { profile: p, stats, asBuyer: asBuyer.length, buyerCompleted, buyerDisputed }
+    return {
+      id: p.id,
+      email: p.email,
+      full_name: p.full_name,
+      created_at: p.created_at,
+      is_banned: p.is_banned ?? false,
+      ban_reason: p.ban_reason ?? null,
+      credibility_boost: boost,
+      admin_notes: p.admin_notes ?? null,
+      stars: stats.stars,
+      baseStars: base.stars,
+      rate: stats.rate,
+      holdHours: stats.holdHours,
+      sellerTotal: asSellerAll.length,
+      buyerTotal: asBuyer.length,
+      buyerCompleted,
+      buyerDisputed,
+    }
   })
 
   return (
@@ -93,49 +110,17 @@ export default async function AdminPage() {
       {/* Disputes */}
       <section>
         <p className="text-xs text-white/50 uppercase tracking-widest mb-4">
-          Open disputes ({(disputes ?? []).length})
+          Open disputes ({disputes.length})
         </p>
-        {!disputes || disputes.length === 0 ? (
-          <p className="text-white/40 text-sm py-8 border-t border-white/20 text-center">No open disputes</p>
-        ) : (
-          <div className="space-y-4">
-            {disputes.map((d) => (
-              <DisputeDecisionPanel key={d.id} dispute={d} />
-            ))}
-          </div>
-        )}
+        <AdminDisputeList disputes={disputes} />
       </section>
 
       {/* Users */}
       <section>
         <p className="text-xs text-white/50 uppercase tracking-widest mb-4">
-          Users ({userStats.length})
+          Users ({userRows.length})
         </p>
-        <div className="border-t border-white/20">
-          {userStats.map(({ profile: p, stats, asBuyer, buyerCompleted, buyerDisputed }) => (
-            <div key={p.id} className="flex items-start gap-6 py-4 px-1 border-b border-white/20 text-sm">
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-medium">{p.full_name ?? '—'}</p>
-                <p className="text-white/50 text-xs">{p.email}</p>
-                <p className="text-white/30 text-xs mt-0.5">joined {new Date(p.created_at).toLocaleDateString()}</p>
-              </div>
-              <div className="text-center w-28">
-                <p className="text-white/50 text-xs mb-1">Seller</p>
-                <p className="text-white font-semibold">{stats.stars > 0 ? `${'★'.repeat(stats.stars)}${'☆'.repeat(5 - stats.stars)}` : 'New'}</p>
-                <p className="text-white/40 text-xs">{stats.total} sales · {stats.rate}%</p>
-                <p className="text-white/30 text-xs">{stats.holdHours}hr hold</p>
-              </div>
-              <div className="text-center w-28">
-                <p className="text-white/50 text-xs mb-1">Buyer</p>
-                <p className="text-white font-semibold">{asBuyer} claims</p>
-                <p className="text-white/40 text-xs">{buyerCompleted} completed</p>
-                {buyerDisputed > 0 && (
-                  <p className="text-orange-400 text-xs">{buyerDisputed} disputed</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <AdminUserTable users={userRows} />
       </section>
     </div>
   )

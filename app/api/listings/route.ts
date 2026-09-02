@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendListingPostedEmail } from '@/lib/resend/client'
 import type { ClassType, NewListingFormData, SkillLevel } from '@/types'
+import { isBanned, BANNED_MESSAGE } from '@/lib/admin/ban'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
   }
   if (!user.email_confirmed_at) {
     return NextResponse.json({ error: 'Please verify your email before posting a listing' }, { status: 403 })
+  }
+  if (await isBanned(user.id)) {
+    return NextResponse.json({ error: BANNED_MESSAGE }, { status: 403 })
   }
 
   const body: NewListingFormData & { confirmation_screenshot_url?: string } = await request.json()

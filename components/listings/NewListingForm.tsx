@@ -77,6 +77,30 @@ export function NewListingForm({ profile }: NewListingFormProps) {
     resolver: zodResolver(schema) as any,
   })
 
+  // Validation errors render inline next to their field. On a small screen the
+  // submit button sits far below an early failing field, so the message lands
+  // off-screen and the form looks like it silently did nothing. Surface it as a
+  // toast and scroll the offending field into view.
+  const onInvalid = (formErrors: Record<string, { message?: string } | undefined>) => {
+    const firstKey = Object.keys(formErrors)[0]
+    if (!firstKey) return
+
+    const message = formErrors[firstKey]?.message
+    const count = Object.keys(formErrors).length
+    toast.error(
+      message
+        ? count > 1 ? `${message} (+${count - 1} more)` : message
+        : 'Please fix the highlighted fields'
+    )
+
+    const el =
+      document.getElementById(`field-${firstKey}`) ??
+      document.querySelector<HTMLElement>(`[name="${firstKey}"]`) ??
+      document.getElementById(firstKey)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el?.focus?.({ preventScroll: true })
+  }
+
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -87,6 +111,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
   const onSubmit = async (data: ListingFormValues) => {
     if (!screenshotFile) {
       toast.error('Please upload your booking confirmation screenshot')
+      document.getElementById('screenshot')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
 
@@ -136,10 +161,10 @@ export function NewListingForm({ profile }: NewListingFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid as never)} className="space-y-6 max-w-2xl">
 
       {/* Studio picker */}
-      <div className="space-y-2">
+      <div className="space-y-2" id="field-studio_id">
         <Label>Studio *</Label>
         <Select onValueChange={(val) => {
           setValue('studio_id', val)
@@ -195,7 +220,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
+        <div className="space-y-2" id="field-class_type">
           <Label>Class type *</Label>
           <Select onValueChange={(val) => setValue('class_type', val as ClassType)}>
             <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
@@ -208,7 +233,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
           {errors.class_type && <p className="text-sm text-red-500">{errors.class_type.message}</p>}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2" id="field-skill_level">
           <Label>Skill level *</Label>
           <Select onValueChange={(val) => setValue('skill_level', val as SkillLevel)}>
             <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>

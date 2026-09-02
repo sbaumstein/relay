@@ -21,21 +21,35 @@ export interface SellerStats {
 
 const MIN_CLAIMS = 5  // minimum before stars show
 
-export function getSellerStats(total: number, completed: number): SellerStats {
+const HOLD_HOURS_BY_STARS: Record<number, number> = {
+  5: 6, 4: 12, 3: 18, 2: 24, 1: 36, 0: 48,
+}
+
+/**
+ * @param boost Manual admin adjustment (-5..+5) applied on top of the
+ *              history-derived rating. Also shortens the escrow hold.
+ */
+export function getSellerStats(total: number, completed: number, boost = 0): SellerStats {
   const rate = total > 0 ? Math.round((completed / total) * 100) : 0
   let stars = 0
-  let holdHours = 48
 
   if (total >= MIN_CLAIMS) {
-    if (rate >= 95)      { stars = 5; holdHours = 6  }
-    else if (rate >= 90) { stars = 4; holdHours = 12 }
-    else if (rate >= 85) { stars = 3; holdHours = 18 }
-    else if (rate >= 75) { stars = 2; holdHours = 24 }
-    else if (rate >= 60) { stars = 1; holdHours = 36 }
-    else                 { stars = 0; holdHours = 48 }
+    if (rate >= 95)      stars = 5
+    else if (rate >= 90) stars = 4
+    else if (rate >= 85) stars = 3
+    else if (rate >= 75) stars = 2
+    else if (rate >= 60) stars = 1
+    else                 stars = 0
   }
 
-  return { total, completed, rate, stars, holdHours }
+  const boosted = Math.max(0, Math.min(5, stars + boost))
+  // A boost only shortens the hold once the seller is out of the "New" state,
+  // so a brand-new account can't be handed a 6 hour hold by accident.
+  const holdHours = total >= MIN_CLAIMS || boost > 0
+    ? HOLD_HOURS_BY_STARS[boosted]
+    : 48
+
+  return { total, completed, rate, stars: boosted, holdHours }
 }
 
 export type ClassType =
@@ -75,6 +89,12 @@ export interface Profile {
   stripe_onboarding_complete: boolean
   created_at: string
   updated_at: string
+  // Admin moderation
+  is_banned?: boolean
+  banned_at?: string | null
+  ban_reason?: string | null
+  credibility_boost?: number
+  admin_notes?: string | null
 }
 
 export interface Listing {

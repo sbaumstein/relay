@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
 import { sendClaimEmails } from '@/lib/resend/client'
 import { getSellerStats } from '@/types'
+import { isBanned, BANNED_MESSAGE } from '@/lib/admin/ban'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -11,6 +12,9 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!user.email_confirmed_at) {
     return NextResponse.json({ error: 'Please verify your email before claiming a spot' }, { status: 403 })
+  }
+  if (await isBanned(user.id)) {
+    return NextResponse.json({ error: BANNED_MESSAGE }, { status: 403 })
   }
 
   const { listing_id } = await request.json()
