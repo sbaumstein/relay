@@ -39,10 +39,18 @@ export async function POST(
       }).catch(console.error)
     }
 
-    await service.from('claims').update({
+    const { data: updated, error: updateError } = await service.from('claims').update({
       status: 'dispute_won',
       updated_at: new Date().toISOString(),
-    }).eq('id', id)
+    }).eq('id', id).select('id')
+
+    if (updateError || !updated?.length) {
+      console.error('[decide] dispute_won update failed', updateError)
+      return NextResponse.json(
+        { error: `Could not record decision: ${updateError?.message ?? 'no rows updated'}` },
+        { status: 500 }
+      )
+    }
 
     // Reopen listing so someone else can claim it
     await service.from('listings').update({
@@ -52,10 +60,18 @@ export async function POST(
 
   } else {
     // Release escrow to seller — Stripe Transfer would go here when Stripe is active
-    await service.from('claims').update({
+    const { data: updated, error: updateError } = await service.from('claims').update({
       status: 'dispute_lost',
       updated_at: new Date().toISOString(),
-    }).eq('id', id)
+    }).eq('id', id).select('id')
+
+    if (updateError || !updated?.length) {
+      console.error('[decide] dispute_lost update failed', updateError)
+      return NextResponse.json(
+        { error: `Could not record decision: ${updateError?.message ?? 'no rows updated'}` },
+        { status: 500 }
+      )
+    }
   }
 
   return NextResponse.json({ success: true })

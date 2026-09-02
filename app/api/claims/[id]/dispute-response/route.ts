@@ -36,12 +36,20 @@ export async function POST(
     return NextResponse.json({ error: 'The 24 hour response window has closed' }, { status: 409 })
   }
 
-  await service.from('claims').update({
+  const { data: updated, error: updateError } = await service.from('claims').update({
     seller_response: response.trim(),
     seller_response_urls: Array.isArray(evidence_urls) ? evidence_urls : [],
     seller_responded_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  }).eq('id', id)
+  }).eq('id', id).select('id')
+
+  if (updateError) {
+    console.error('[dispute-response] update failed', updateError)
+    return NextResponse.json({ error: `Could not save response: ${updateError.message}` }, { status: 500 })
+  }
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ error: 'Response did not save. Please try again.' }, { status: 500 })
+  }
 
   return NextResponse.json({ success: true })
 }

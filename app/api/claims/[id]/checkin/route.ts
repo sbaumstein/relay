@@ -41,7 +41,7 @@ export async function POST(
 
   const serviceSupabase = createServiceClient()
 
-  await serviceSupabase
+  const { data: updated, error: updateError } = await serviceSupabase
     .from('claims')
     .update({
       checkin_response: attended,
@@ -53,6 +53,16 @@ export async function POST(
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .select('id, status, checkin_responded_at')
 
-  return NextResponse.json({ success: true, attended })
+  if (updateError) {
+    console.error('[checkin] update failed', updateError)
+    return NextResponse.json({ error: `Check-in failed: ${updateError.message}` }, { status: 500 })
+  }
+  if (!updated || updated.length === 0) {
+    console.error('[checkin] update matched no rows', { id })
+    return NextResponse.json({ error: 'Check-in did not save. Please try again.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true, attended, claim: updated[0] })
 }

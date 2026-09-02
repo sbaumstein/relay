@@ -24,10 +24,18 @@ export async function POST(
   }
 
   const service = createServiceClient()
-  await service.from('claims').update({
+  const { data: updated, error: updateError } = await service.from('claims').update({
     status: 'claimed',
     updated_at: new Date().toISOString(),
-  }).eq('id', id)
+  }).eq('id', id).select('id')
+
+  if (updateError) {
+    console.error('[confirm] update failed', updateError)
+    return NextResponse.json({ error: `Could not confirm: ${updateError.message}` }, { status: 500 })
+  }
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ error: 'Confirmation did not save. Please try again.' }, { status: 500 })
+  }
 
   return NextResponse.json({ success: true })
 }

@@ -33,7 +33,7 @@ export async function POST(
   const now = new Date()
   const responseDeadline = new Date(now.getTime() + SELLER_RESPONSE_HOURS * 60 * 60 * 1000)
 
-  await serviceSupabase
+  const { data: updated, error: updateError } = await serviceSupabase
     .from('claims')
     .update({
       status: 'disputed',
@@ -45,6 +45,15 @@ export async function POST(
       updated_at: now.toISOString(),
     })
     .eq('id', id)
+    .select('id')
+
+  if (updateError) {
+    console.error('[dispute] update failed', updateError)
+    return NextResponse.json({ error: `Could not file dispute: ${updateError.message}` }, { status: 500 })
+  }
+  if (!updated || updated.length === 0) {
+    return NextResponse.json({ error: 'Dispute did not save. Please try again.' }, { status: 500 })
+  }
 
   // Notify the seller that they have a limited window to respond
   const { data: seller } = await serviceSupabase
