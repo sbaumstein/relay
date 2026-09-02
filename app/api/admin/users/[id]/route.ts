@@ -34,8 +34,10 @@ export async function PATCH(
     )
   }
   if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 })
-  if (target.email === ADMIN_EMAIL && (action === 'ban' || action === 'set_boost')) {
-    return NextResponse.json({ error: 'You cannot moderate the admin account' }, { status: 400 })
+  // Banning the admin would lock you out of this panel. Adjusting your own
+  // credibility is harmless, so it stays allowed.
+  if (target.email === ADMIN_EMAIL && action === 'ban') {
+    return NextResponse.json({ error: 'You cannot ban the admin account' }, { status: 400 })
   }
 
   let patch: Record<string, unknown>
