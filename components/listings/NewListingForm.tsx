@@ -57,9 +57,15 @@ export function NewListingForm({ profile }: NewListingFormProps) {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
   const router = useRouter()
 
-  const minDate = new Date()
-  minDate.setHours(minDate.getHours() + 2)
-  const minDateStr = minDate.toISOString().split('T')[0]
+  // Today is allowed as long as the class time itself is still ahead.
+  // Built from local parts: toISOString() is UTC and would roll over to
+  // tomorrow during the evening, blocking same-day posts.
+  const today = new Date()
+  const minDateStr = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-')
 
   useEffect(() => {
     fetch('/api/studios')
@@ -146,6 +152,9 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         duration_minutes: data.duration_minutes || undefined,
         neighborhood: data.neighborhood || undefined,
         confirmation_screenshot_url: publicUrl,
+        // Resolved in the poster's timezone; the server would otherwise parse
+        // the naive date+time as UTC.
+        class_datetime: new Date(`${data.class_date}T${data.class_time}`).toISOString(),
       }),
     })
 

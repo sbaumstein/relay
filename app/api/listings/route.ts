@@ -49,14 +49,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: BANNED_MESSAGE }, { status: 403 })
   }
 
-  const body: NewListingFormData & { confirmation_screenshot_url?: string } = await request.json()
+  const body: NewListingFormData & {
+    confirmation_screenshot_url?: string
+    class_datetime?: string
+  } = await request.json()
 
-  // Validate class is in the future (at least 2 hours)
-  const classDt = new Date(`${body.class_date}T${body.class_time}`)
-  const twoHoursFromNow = new Date(Date.now() + 2 * 60 * 60 * 1000)
-  if (classDt <= twoHoursFromNow) {
+  // Same-day listings are fine as long as the class has not started yet.
+  // Prefer the client's resolved timestamp: parsing date+time here would use
+  // the server's timezone (UTC in production), not the poster's.
+  const classDt = body.class_datetime
+    ? new Date(body.class_datetime)
+    : new Date(`${body.class_date}T${body.class_time}`)
+
+  if (Number.isNaN(classDt.getTime())) {
+    return NextResponse.json({ error: 'Invalid class date or time' }, { status: 400 })
+  }
+  if (classDt <= new Date()) {
     return NextResponse.json(
-      { error: 'Class must be at least 2 hours in the future' },
+      { error: 'Class must be in the future' },
       { status: 400 }
     )
   }
