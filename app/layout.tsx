@@ -19,8 +19,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${geist.variable} font-sans antialiased`}>
+    /* suppressHydrationWarning: browser extensions (Bitdefender, Grammarly, …)
+       inject attributes onto html/body before React hydrates. */
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${geist.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
         <Toaster />
       </body>
