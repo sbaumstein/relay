@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminUser, ADMIN_EMAIL } from '@/lib/admin/auth'
+import { revokeBannedUserActivity } from '@/lib/admin/revoke'
 
 type Action = 'ban' | 'unban' | 'set_boost' | 'set_notes'
 
@@ -82,27 +83,16 @@ export async function PATCH(
     return NextResponse.json({ error: 'Update did not save. Please try again.' }, { status: 500 })
   }
 
-  // Banning kills the seller's open listings. Spots already claimed are left
-  // alone — a buyer has money in escrow against them and that flow still needs
-  // to resolve. Unbanning does not bring cancelled listings back.
-  let cancelledListings = 0
+  // A ban ends everything the user is involved in: money returned on both
+  // sides, their listings taken down, and spots they had claimed released
+  // back to browse. Unbanning does not undo any of it.
   if (action === 'ban') {
-    const { data: cancelled, error: cancelError } = await service
-      .from('listings')
-      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-      .eq('seller_id', id)
-      .eq('status', 'available')
-      .select('id')
-
-    if (cancelError) {
-      console.error('[admin/users] cancelling listings failed', cancelError)
-      return NextResponse.json(
-        { error: `User banned, but their listings could not be cancelled: ${cancelError.message}` },
-        { status: 500 }
-      )
+    const revoked = await revokeBannedUserActivity(service, id)
+    if (revoked.errors.length > 0) {
+      console.error('[admin/users] revoke had errors', revoked.errors)
     }
-    cancelledListings = cancelled?.length ?? 0
+    return NextResponse.json({ success: true, profile: updated[0], revoked })
   }
 
-  return NextResponse.json({ success: true, profile: updated[0], cancelledListings })
+  return NextResponse.json({ success: true, profile: updated[0] })
 }

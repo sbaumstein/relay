@@ -55,12 +55,19 @@ export function AdminUserTable({ users }: { users: AdminUserRow[] }) {
     const data = await res.json()
     setBusy(null)
     if (!res.ok) { toast.error(data.error ?? 'Action failed'); return }
-    const killed = data.cancelledListings ?? 0
-    toast.success(
-      killed > 0
-        ? `${successMsg} — ${killed} active listing${killed === 1 ? '' : 's'} cancelled`
-        : successMsg
-    )
+    const r = data.revoked
+    if (r) {
+      const parts = [
+        r.listingsCancelled && `${r.listingsCancelled} listing${r.listingsCancelled === 1 ? '' : 's'} removed`,
+        (r.refundedAsSeller + r.refundedAsBuyer) &&
+          `${r.refundedAsSeller + r.refundedAsBuyer} claim${r.refundedAsSeller + r.refundedAsBuyer === 1 ? '' : 's'} refunded`,
+        r.spotsReleased && `${r.spotsReleased} spot${r.spotsReleased === 1 ? '' : 's'} back on browse`,
+      ].filter(Boolean)
+      toast.success(parts.length ? `${successMsg} — ${parts.join(', ')}` : successMsg)
+      if (r.errors?.length) toast.error(r.errors[0])
+    } else {
+      toast.success(successMsg)
+    }
     router.refresh()
   }
 
@@ -70,7 +77,7 @@ export function AdminUserTable({ users }: { users: AdminUserRow[] }) {
       return
     }
     const reason = window.prompt(
-      `Ban ${u.email}?\n\nThis also cancels their open listings. Claimed spots are left alone.\n\nOptional reason (shown in admin only):`
+      `Ban ${u.email}?\n\nThis ends all their activity: listings removed, claims refunded, and spots they claimed returned to browse.\n\nOptional reason (shown in admin only):`
     )
     if (reason === null) return
     act(u.id, { action: 'ban', reason }, `${u.email} banned`)
