@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { MapPin, Clock, User, Calendar, ArrowLeft, ShieldCheck } from 'lucide-react'
+import { MapPin, Clock, User, Calendar, ArrowLeft, ShieldCheck, Maximize2 } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ClaimButton } from '@/components/listings/ClaimButton'
@@ -213,11 +213,23 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
                 <h2 className="font-semibold">Booking confirmation</h2>
               </div>
-              <img
-                src={listing.confirmation_screenshot_url}
-                alt="Booking confirmation"
-                className="rounded-lg border max-h-64 object-contain"
-              />
+              <a
+                href={listing.confirmation_screenshot_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block w-fit"
+                title="Open full size"
+              >
+                <img
+                  src={listing.confirmation_screenshot_url}
+                  alt="Booking confirmation"
+                  className="rounded-lg border max-h-64 object-contain transition-opacity group-hover:opacity-80"
+                />
+                <span className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                  <Maximize2 className="h-3 w-3" />
+                  Tap to view full size
+                </span>
+              </a>
             </CardContent>
           </Card>
         )}
