@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,13 +15,14 @@ interface CheckInCardProps {
 export function CheckInCard({ claimId, className }: CheckInCardProps) {
   const [loading, setLoading] = useState<'yes' | 'no' | null>(null)
   const [done, setDone] = useState<boolean | null>(null)
+  const router = useRouter()
 
-  const respond = async (attended: boolean) => {
-    setLoading(attended ? 'yes' : 'no')
+  const confirmAttended = async () => {
+    setLoading('yes')
     const res = await fetch(`/api/claims/${claimId}/checkin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ attended }),
+      body: JSON.stringify({ attended: true }),
     })
     const data = await res.json()
     setLoading(null)
@@ -30,12 +32,16 @@ export function CheckInCard({ claimId, className }: CheckInCardProps) {
       return
     }
 
-    setDone(attended)
-    if (attended) {
-      toast.success('Great! Your escrow will release to the seller in 24 hours.')
-    } else {
-      toast('Got it — we\'ll hold the funds and review your case.')
-    }
+    setDone(true)
+    toast.success('Great! Your escrow will release to the seller in 24 hours.')
+    router.refresh()
+  }
+
+  // Couldn't get in → collect the details on the dispute form rather than
+  // filing a bare no-show with no explanation.
+  const reportProblem = () => {
+    setLoading('no')
+    router.push(`/claims/${claimId}/dispute`)
   }
 
   if (done !== null) {
@@ -60,7 +66,7 @@ export function CheckInCard({ claimId, className }: CheckInCardProps) {
             variant="outline"
             className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
             disabled={!!loading}
-            onClick={() => respond(true)}
+            onClick={confirmAttended}
           >
             {loading === 'yes' ? '…' : '✓ Yes, I went'}
           </Button>
@@ -69,9 +75,9 @@ export function CheckInCard({ claimId, className }: CheckInCardProps) {
             variant="outline"
             className="border-red-300 text-red-600 hover:bg-red-50"
             disabled={!!loading}
-            onClick={() => respond(false)}
+            onClick={reportProblem}
           >
-            {loading === 'no' ? '…' : '✗ No, I couldn\'t'}
+            {loading === 'no' ? 'Opening…' : '✗ No, I couldn\'t get in'}
           </Button>
         </div>
       </CardContent>

@@ -11,6 +11,7 @@ import { AlertCircle } from 'lucide-react'
 import { EvidenceUpload } from '@/components/claims/EvidenceUpload'
 
 const DISPUTE_REASONS = [
+  'I couldn\'t get in — my name wasn\'t on the list',
   'The booking confirmation was fake or invalid',
   'The seller became unresponsive after I paid',
   'The class details were materially different from the listing',
