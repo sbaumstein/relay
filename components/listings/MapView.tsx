@@ -41,10 +41,12 @@ function getCoords(studioName: string): [number, number] {
   return [40.73 + (seed % 10) * 0.008, -74.01 + (seed % 7) * 0.009]
 }
 
+// Leaflet is loaded from a CDN at runtime, not installed as a package,
+// so there are no types to import here.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type LeafletMap = any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type LeafletLayer = any
+type LeafletNS = any
+type LeafletMap = LeafletNS
+type LeafletLayer = LeafletNS
 
 export function MapView({ listings }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null)
@@ -57,7 +59,7 @@ export function MapView({ listings }: MapViewProps) {
     if (mapInstanceRef.current) return
 
     const ensureLeaflet = (cb: () => void) => {
-      const win = window as unknown as { L?: typeof import('leaflet') }
+      const win = window as unknown as { L?: LeafletNS }
       if (win.L) { cb(); return }
 
       const existing = document.querySelector('script[data-leaflet]')
@@ -79,7 +81,7 @@ export function MapView({ listings }: MapViewProps) {
 
     ensureLeaflet(() => {
       if (!mapRef.current || mapInstanceRef.current) return
-      const L = (window as unknown as { L: typeof import('leaflet') }).L
+      const L = (window as unknown as { L: LeafletNS }).L
 
       const map = L.map(mapRef.current, {
         center: [40.748, -73.985],
@@ -107,7 +109,7 @@ export function MapView({ listings }: MapViewProps) {
 
   // Re-draw markers whenever listings change
   useEffect(() => {
-    const win = window as unknown as { L?: typeof import('leaflet') }
+    const win = window as unknown as { L?: LeafletNS }
     if (!win.L || !markerLayerRef.current) return
     const L = win.L
     drawMarkers(L, markerLayerRef.current, listings)
