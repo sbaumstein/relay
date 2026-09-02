@@ -54,6 +54,22 @@ export async function POST(request: NextRequest) {
     class_datetime?: string
   } = await request.json()
 
+  // Optional last-minute price. Must be a real reduction, or it would silently
+  // do nothing (or worse, raise the price) once the discount window opens.
+  const discountCents =
+    body.discount_price_cents == null ? null : Math.round(Number(body.discount_price_cents))
+  if (discountCents != null) {
+    if (!Number.isFinite(discountCents) || discountCents < 0) {
+      return NextResponse.json({ error: 'Last-minute price is not valid' }, { status: 400 })
+    }
+    if (discountCents >= body.price_cents) {
+      return NextResponse.json(
+        { error: 'Last-minute price must be below the full price' },
+        { status: 400 }
+      )
+    }
+  }
+
   // Same-day listings are fine as long as the class has not started yet.
   // Prefer the client's resolved timestamp: parsing date+time here would use
   // the server's timezone (UTC in production), not the poster's.
@@ -98,6 +114,7 @@ export async function POST(request: NextRequest) {
       address: body.address,
       neighborhood: body.neighborhood || null,
       price_cents: body.price_cents,
+      discount_price_cents: discountCents,
       skill_level: body.skill_level ?? 'all_levels',
       studio_id: body.studio_id || null,
       confirmation_screenshot_url: body.confirmation_screenshot_url || null,

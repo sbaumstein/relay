@@ -114,6 +114,8 @@ export interface Listing {
   address: string
   neighborhood: string | null
   price_cents: number
+  /** Optional fallback price once the class is within 2 hours of starting. */
+  discount_price_cents: number | null
   is_free: boolean
   confirmation_screenshot_url: string | null
   status: ListingStatus
@@ -158,6 +160,7 @@ export interface NewListingFormData {
   address: string
   neighborhood?: string
   price_cents: number
+  discount_price_cents?: number | null
 }
 
 export interface ListingFilters {

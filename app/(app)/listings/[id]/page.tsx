@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { CLASS_TYPE_COLORS, CLASS_TYPES, SKILL_LEVELS, getSellerStats } from '@/types'
 import { StarRating } from '@/components/ui/StarRating'
 import { formatCents } from '@/lib/stripe/helpers'
+import { getEffectivePrice, DISCOUNT_WINDOW_HOURS } from '@/lib/pricing'
 import type { Listing } from '@/types'
 
 interface ListingDetailPageProps {
@@ -87,6 +88,8 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const skillLabel = SKILL_LEVELS.find((s) => s.value === listing.skill_level)?.label
 
   const studio = listing.studio as { name: string; cancellation_policy: string; cancellation_fee_cents: number | null; payment_type: string } | null
+
+  const price = getEffectivePrice(listing)
 
   const cancellationFeeDisplay = studio
     ? studio.cancellation_policy === 'fixed_fee'
@@ -167,7 +170,25 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             <CardContent className="p-5 space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground">Class price (escrowed)</p>
-                <p className="text-2xl font-bold">{formatCents(listing.price_cents)}</p>
+                <div className="flex items-baseline gap-2">
+                  <p className={`text-2xl font-bold ${price.discounted ? 'text-emerald-500' : ''}`}>
+                    {formatCents(price.cents)}
+                  </p>
+                  {price.discounted && (
+                    <p className="text-sm text-muted-foreground line-through">
+                      {formatCents(price.originalCents!)}
+                    </p>
+                  )}
+                </div>
+                {price.discounted && (
+                  <p className="text-xs text-emerald-600 mt-0.5">Last-minute price</p>
+                )}
+                {!price.discounted && listing.discount_price_cents != null && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Drops to {formatCents(listing.discount_price_cents)} within{' '}
+                    {DISCOUNT_WINDOW_HOURS} hours of class
+                  </p>
+                )}
                 {studio && (
                   <p className="text-xs text-muted-foreground mt-0.5">
                     No-show fee to seller: {cancellationFeeDisplay}

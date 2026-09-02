@@ -10,6 +10,7 @@ import { MapView } from '@/components/listings/MapView'
 import { getSellerStats } from '@/types'
 import type { ClassType, Listing } from '@/types'
 import { expireStaleListings } from '@/lib/expireListings'
+import { getEffectivePrice } from '@/lib/pricing'
 
 interface BrowsePageProps {
   searchParams: Promise<{
@@ -75,7 +76,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
     class_name: l.class_name,
     studio_name: l.studio_name,
     address: l.address,
-    price_cents: l.price_cents,
+    price_cents: getEffectivePrice(l).cents,
   }))
 
   return (

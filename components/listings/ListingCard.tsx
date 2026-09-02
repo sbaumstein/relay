@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { CLASS_TYPES, SKILL_LEVELS, getSellerStats } from '@/types'
 import type { Listing, SellerStats } from '@/types'
 import { formatCents } from '@/lib/stripe/helpers'
+import { getEffectivePrice } from '@/lib/pricing'
 import { StarRating } from '@/components/ui/StarRating'
 
 interface ListingCardProps {
@@ -16,6 +17,7 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
   const classTypeLabel = CLASS_TYPES.find((t) => t.value === listing.class_type)?.label ?? listing.class_type
   const skillLabel = SKILL_LEVELS.find((s) => s.value === listing.skill_level)?.label ?? listing.skill_level
   const stats = sellerStats ?? getSellerStats(0, 0)
+  const price = getEffectivePrice(listing)
 
   return (
     <Link href={`/listings/${listing.id}`} className="group block">
@@ -62,7 +64,16 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
           {listing.is_free ? (
             <p className="text-emerald-400 font-bold text-sm">Free</p>
           ) : (
-            <p className="text-white font-bold text-base sm:text-lg">{formatCents(listing.price_cents)}</p>
+            <div>
+              <p className={`font-bold text-base sm:text-lg ${price.discounted ? 'text-emerald-400' : 'text-white'}`}>
+                {formatCents(price.cents)}
+              </p>
+              {price.discounted && (
+                <p className="text-[10px] text-white/40 line-through leading-none">
+                  {formatCents(price.originalCents!)}
+                </p>
+              )}
+            </div>
           )}
           <div className="mt-1 hidden sm:block">
             <StarRating stars={stats.stars} total={stats.total} />

@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
 import { sendClaimEmails } from '@/lib/resend/client'
 import { getSellerStats } from '@/types'
+import { getEffectivePrice } from '@/lib/pricing'
 import { isBanned, BANNED_MESSAGE } from '@/lib/admin/ban'
 
 export async function POST(request: NextRequest) {
@@ -46,12 +47,15 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
   if (existingClaim) return NextResponse.json({ error: 'You already have an active claim' }, { status: 409 })
 
+  // Price is resolved server-side so a stale page can't lock in an old amount.
+  const { cents: chargeCents } = getEffectivePrice(listing)
+
   // Determine the cancellation fee that goes to seller on no-show
   const studio = listing.studio
   const cancellationFeeCents = studio
     ? studio.cancellation_policy === 'fixed_fee'
       ? (studio.cancellation_fee_cents ?? 0)
-      : listing.price_cents // full_class = buyer loses everything
+      : chargeCents // full_class = buyer loses everything
     : 0
 
   // Compute seller star rating to determine hold time
@@ -87,7 +91,7 @@ export async function POST(request: NextRequest) {
   // If Stripe is configured, charge the full class price into escrow
   if (process.env.STRIPE_SECRET_KEY) {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: listing.price_cents,
+      amount: chargeCents,
       currency: 'usd',
       metadata: {
         listing_id,
@@ -103,9 +107,9 @@ export async function POST(request: NextRequest) {
         listing_id,
         claimer_id: user.id,
         seller_id: listing.seller_id,
-        amount_cents: listing.price_cents,
+        amount_cents: chargeCents,
         platform_fee_cents: 0,
-        seller_payout_cents: listing.price_cents,
+        seller_payout_cents: chargeCents,
         cancellation_fee_cents: cancellationFeeCents,
         stripe_payment_intent_id: paymentIntent.id,
         expires_at: expiresAt.toISOString(),
@@ -134,9 +138,9 @@ export async function POST(request: NextRequest) {
       listing_id,
       claimer_id: user.id,
       seller_id: listing.seller_id,
-      amount_cents: listing.price_cents,
+      amount_cents: chargeCents,
       platform_fee_cents: 0,
-      seller_payout_cents: listing.price_cents,
+      seller_payout_cents: chargeCents,
       cancellation_fee_cents: cancellationFeeCents,
       expires_at: expiresAt.toISOString(),
       status: 'pending_confirmation',

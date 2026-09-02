@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCents } from '@/lib/stripe/helpers'
+import { getEffectivePrice } from '@/lib/pricing'
 import type { Listing } from '@/types'
 import { ShieldCheck } from 'lucide-react'
 
@@ -16,6 +17,7 @@ interface ClaimButtonProps {
 }
 
 export function ClaimButton({ listing, isLoggedIn, isOwner }: ClaimButtonProps) {
+  const price = getEffectivePrice(listing)
   const [loading, setLoading] = useState(false)
   const [claimId, setClaimId] = useState<string | null>(null)
   const router = useRouter()
@@ -42,7 +44,7 @@ export function ClaimButton({ listing, isLoggedIn, isOwner }: ClaimButtonProps) 
               <span>Payment escrowed!</span>
             </div>
             <p>
-              Your {formatCents(listing.price_cents)} is held securely. It releases to the seller
+              Your {formatCents(price.cents)} is held securely. It releases to the seller
               24 hours after the class. Contact them to arrange booking transfer.
             </p>
             <p className="font-medium">{listing.seller?.email}</p>
@@ -84,7 +86,7 @@ export function ClaimButton({ listing, isLoggedIn, isOwner }: ClaimButtonProps) 
   return (
     <div className="space-y-3">
       <Button className="w-full" size="lg" onClick={handleClaim} disabled={loading}>
-        {loading ? 'Processing…' : `Claim · ${formatCents(listing.price_cents)}`}
+        {loading ? 'Processing…' : `Claim · ${formatCents(price.cents)}`}
       </Button>
       <div className="flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-emerald-600" />

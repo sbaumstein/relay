@@ -41,7 +41,14 @@ const schema = z.object({
   address: z.string().min(1, 'Address is required'),
   neighborhood: z.string().optional(),
   price_dollars: z.coerce.number().min(1, 'Price is required'),
-})
+  discount_dollars: z.union([z.coerce.number(), z.literal('')]).optional(),
+}).refine(
+  (d) => {
+    if (d.discount_dollars === '' || d.discount_dollars == null) return true
+    return Number(d.discount_dollars) < Number(d.price_dollars)
+  },
+  { message: 'Last-minute price must be below the full price', path: ['discount_dollars'] },
+)
 
 type ListingFormValues = z.infer<typeof schema>
 
@@ -147,6 +154,10 @@ export function NewListingForm({ profile }: NewListingFormProps) {
       body: JSON.stringify({
         ...data,
         price_cents: Math.round((data.price_dollars ?? 0) * 100),
+        discount_price_cents:
+          data.discount_dollars === '' || data.discount_dollars == null
+            ? null
+            : Math.round(Number(data.discount_dollars) * 100),
         instructor_name: data.instructor_name || undefined,
         description: data.description || undefined,
         duration_minutes: data.duration_minutes || undefined,
@@ -295,6 +306,27 @@ export function NewListingForm({ profile }: NewListingFormProps) {
           This is the full amount the buyer pays into escrow.
         </p>
         {errors.price_dollars && <p className="text-sm text-red-500">{errors.price_dollars.message}</p>}
+      </div>
+
+      <div className="space-y-2" id="field-discount_dollars">
+        <Label htmlFor="discount_dollars">
+          Last-minute price <span className="text-muted-foreground font-normal">(optional)</span>
+        </Label>
+        <Input
+          id="discount_dollars"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="e.g. 15.00"
+          {...register('discount_dollars')}
+        />
+        <p className="text-xs text-muted-foreground">
+          If the spot is still unclaimed 2 hours before class, the price drops to
+          this automatically — better than getting nothing back.
+        </p>
+        {errors.discount_dollars && (
+          <p className="text-sm text-red-500">{errors.discount_dollars.message as string}</p>
+        )}
       </div>
 
       {/* Screenshot upload */}
