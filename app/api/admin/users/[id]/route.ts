@@ -82,5 +82,27 @@ export async function PATCH(
     return NextResponse.json({ error: 'Update did not save. Please try again.' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, profile: updated[0] })
+  // Banning kills the seller's open listings. Spots already claimed are left
+  // alone — a buyer has money in escrow against them and that flow still needs
+  // to resolve. Unbanning does not bring cancelled listings back.
+  let cancelledListings = 0
+  if (action === 'ban') {
+    const { data: cancelled, error: cancelError } = await service
+      .from('listings')
+      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+      .eq('seller_id', id)
+      .eq('status', 'available')
+      .select('id')
+
+    if (cancelError) {
+      console.error('[admin/users] cancelling listings failed', cancelError)
+      return NextResponse.json(
+        { error: `User banned, but their listings could not be cancelled: ${cancelError.message}` },
+        { status: 500 }
+      )
+    }
+    cancelledListings = cancelled?.length ?? 0
+  }
+
+  return NextResponse.json({ success: true, profile: updated[0], cancelledListings })
 }

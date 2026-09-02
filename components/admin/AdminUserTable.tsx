@@ -55,7 +55,12 @@ export function AdminUserTable({ users }: { users: AdminUserRow[] }) {
     const data = await res.json()
     setBusy(null)
     if (!res.ok) { toast.error(data.error ?? 'Action failed'); return }
-    toast.success(successMsg)
+    const killed = data.cancelledListings ?? 0
+    toast.success(
+      killed > 0
+        ? `${successMsg} — ${killed} active listing${killed === 1 ? '' : 's'} cancelled`
+        : successMsg
+    )
     router.refresh()
   }
 
@@ -64,7 +69,9 @@ export function AdminUserTable({ users }: { users: AdminUserRow[] }) {
       act(u.id, { action: 'unban' }, `${u.email} unbanned`)
       return
     }
-    const reason = window.prompt(`Ban ${u.email}?\n\nOptional reason (shown in admin only):`)
+    const reason = window.prompt(
+      `Ban ${u.email}?\n\nThis also cancels their open listings. Claimed spots are left alone.\n\nOptional reason (shown in admin only):`
+    )
     if (reason === null) return
     act(u.id, { action: 'ban', reason }, `${u.email} banned`)
   }
