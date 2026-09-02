@@ -8,6 +8,11 @@ ALTER TYPE claim_status ADD VALUE IF NOT EXISTS 'dispute_won';
 ALTER TYPE claim_status ADD VALUE IF NOT EXISTS 'dispute_lost';
 ALTER TYPE claim_status ADD VALUE IF NOT EXISTS 'needs_review';
 
+-- Post-class check-in. These were referenced by the app but never created,
+-- so the check-in write failed silently and the prompt kept reappearing.
+ALTER TABLE claims ADD COLUMN IF NOT EXISTS checkin_response boolean;
+ALTER TABLE claims ADD COLUMN IF NOT EXISTS checkin_responded_at timestamptz;
+
 -- Buyer-side evidence attached when filing
 ALTER TABLE claims ADD COLUMN IF NOT EXISTS dispute_notes text;
 ALTER TABLE claims ADD COLUMN IF NOT EXISTS dispute_evidence_urls text[] DEFAULT '{}';

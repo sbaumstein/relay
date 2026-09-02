@@ -45,8 +45,16 @@ export default async function DashboardPage() {
 
   const [{ data: profile }, { data: myListings }, { data: myClaims }, { data: sellerClaims }, { data: disputesAgainstMe }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
-    supabase.from('listings').select('*').eq('seller_id', user.id).order('created_at', { ascending: false }),
-    supabase.from('claims').select('*, listing:listings(*, duration_minutes), checkin_responded_at, checkin_response').eq('claimer_id', user.id).order('created_at', { ascending: false }),
+    supabase.from('listings')
+      .select('*')
+      .eq('seller_id', user.id)
+      .not('status', 'in', '("expired","cancelled")')
+      .order('created_at', { ascending: false }),
+    supabase.from('claims')
+      .select('*, listing:listings(*, duration_minutes), checkin_responded_at, checkin_response')
+      .eq('claimer_id', user.id)
+      .not('status', 'in', '("completed","auto_released","refunded","dispute_won","dispute_lost")')
+      .order('created_at', { ascending: false }),
     supabase.from('claims').select('status').eq('seller_id', user.id),
     supabase.from('claims')
       .select('*, listing:listings(class_name, studio_name)')
@@ -110,11 +118,11 @@ export default async function DashboardPage() {
       {/* My Listings */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/60 uppercase tracking-widest">My listings ({myListings?.length ?? 0})</p>
+          <p className="text-xs text-white/60 uppercase tracking-widest">Active listings ({myListings?.length ?? 0})</p>
           <Link href="/listings/new" className="text-xs text-white/70 hover:text-white transition-colors">+ New</Link>
         </div>
         {!myListings || myListings.length === 0 ? (
-          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No listings yet</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No active listings</p>
         ) : (
           <div className="border-t border-white/20">
             {myListings.map((listing) => {
@@ -146,10 +154,10 @@ export default async function DashboardPage() {
       {/* My Claims */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/60 uppercase tracking-widest">Claimed spots ({myClaims?.length ?? 0})</p>
+          <p className="text-xs text-white/60 uppercase tracking-widest">Active claimed spots ({myClaims?.length ?? 0})</p>
         </div>
         {!myClaims || myClaims.length === 0 ? (
-          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No claimed spots yet</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No active claimed spots</p>
         ) : (
           <div className="border-t border-white/20">
             {myClaims.map((claim) => {
