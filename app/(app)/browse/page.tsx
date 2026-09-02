@@ -16,6 +16,8 @@ interface BrowsePageProps {
   searchParams: Promise<{
     class_type?: string
     neighborhood?: string
+    q?: string
+    sort?: string
   }>
 }
 
@@ -30,11 +32,29 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
     .select('*, seller:profiles!seller_id(id, full_name, email, is_banned)')
     .eq('status', 'available')
     .gte('class_datetime', new Date().toISOString())
-    .order('class_datetime', { ascending: true })
-    .limit(50)
+
+  switch (params.sort) {
+    case 'newest':     query = query.order('created_at', { ascending: false }); break
+    case 'latest':     query = query.order('class_datetime', { ascending: false }); break
+    case 'price_low':  query = query.order('price_cents', { ascending: true }); break
+    case 'price_high': query = query.order('price_cents', { ascending: false }); break
+    default:           query = query.order('class_datetime', { ascending: true })
+  }
+
+  query = query.limit(50)
 
   if (params.class_type) query = query.eq('class_type', params.class_type as ClassType)
   if (params.neighborhood) query = query.eq('neighborhood', params.neighborhood)
+
+  // Commas and parens are delimiters in PostgREST's or() syntax, so strip them
+  // rather than let a stray character break the whole filter.
+  const term = (params.q ?? '').trim().replace(/[,()*]/g, '')
+  if (term) {
+    query = query.or(
+      `class_name.ilike.%${term}%,studio_name.ilike.%${term}%,` +
+      `neighborhood.ilike.%${term}%,instructor_name.ilike.%${term}%`
+    )
+  }
 
   const { data: rawListings } = await query
 
@@ -47,7 +67,9 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
     return (
       <div className="flex gap-6" style={{ height: 'calc(100vh - 180px)' }}>
         <div className="flex-1 flex items-center justify-center text-white/60 text-sm border-t border-white/20">
-          No spots available — check back soon
+          {params.q || params.class_type
+            ? 'No spots match your search'
+            : 'No spots available — check back soon'}
         </div>
         <div className="w-[420px] flex-shrink-0 sticky top-20" style={{ height: 'calc(100vh - 180px)' }}>
           <MapView listings={[]} />
