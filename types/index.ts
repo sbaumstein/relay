@@ -9,6 +9,13 @@ export interface Studio {
   payment_type: PaymentType
   is_active: boolean
   created_at: string
+  /** Typical drop-in price range, used as guidance when pricing a listing. */
+  price_min_cents?: number | null
+  price_max_cents?: number | null
+  /** Null when the cutoff isn't a fixed number of hours before class. */
+  cancellation_cutoff_hours?: number | null
+  cancellation_cutoff_label?: string | null
+  cancellation_notes?: string | null
 }
 
 export interface SellerStats {

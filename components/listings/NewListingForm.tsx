@@ -203,17 +203,25 @@ export function NewListingForm({ profile }: NewListingFormProps) {
 
         {selectedStudio && (
           <Card className="border-blue-100 bg-blue-50">
-            <CardContent className="py-3 text-sm text-blue-800 space-y-0.5">
-              <p>
-                <strong>Cancellation policy:</strong>{' '}
-                {selectedStudio.cancellation_policy === 'fixed_fee'
-                  ? `${formatCents(selectedStudio.cancellation_fee_cents ?? 0)} fee`
-                  : 'Full class price'}
-              </p>
+            <CardContent className="py-3 text-sm text-blue-800 space-y-1">
+              {selectedStudio.price_min_cents != null && selectedStudio.price_max_cents != null && (
+                <p>
+                  <strong>Typical price:</strong>{' '}
+                  {formatCents(selectedStudio.price_min_cents)}–{formatCents(selectedStudio.price_max_cents)} per class
+                </p>
+              )}
+              {selectedStudio.cancellation_cutoff_label && (
+                <p>
+                  <strong>Free cancellation until:</strong> {selectedStudio.cancellation_cutoff_label}
+                </p>
+              )}
               <p>
                 <strong>Payment:</strong>{' '}
                 {selectedStudio.payment_type === 'prepaid' ? 'Prepaid' : 'Pay in person'}
               </p>
+              {selectedStudio.cancellation_notes && (
+                <p className="text-xs text-blue-700">{selectedStudio.cancellation_notes}</p>
+              )}
               <p className="text-xs text-blue-600 mt-1">
                 If the buyer no-shows, they forfeit{' '}
                 {selectedStudio.cancellation_policy === 'fixed_fee'
@@ -304,6 +312,12 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         />
         <p className="text-xs text-muted-foreground">
           This is the full amount the buyer pays into escrow.
+          {selectedStudio?.price_min_cents != null && selectedStudio?.price_max_cents != null && (
+            <>
+              {' '}{selectedStudio.name} classes usually run{' '}
+              {formatCents(selectedStudio.price_min_cents)}–{formatCents(selectedStudio.price_max_cents)}.
+            </>
+          )}
         </p>
         {errors.price_dollars && <p className="text-sm text-red-500">{errors.price_dollars.message}</p>}
       </div>

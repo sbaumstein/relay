@@ -87,7 +87,14 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const colorClass = CLASS_TYPE_COLORS[listing.class_type]
   const skillLabel = SKILL_LEVELS.find((s) => s.value === listing.skill_level)?.label
 
-  const studio = listing.studio as { name: string; cancellation_policy: string; cancellation_fee_cents: number | null; payment_type: string } | null
+  const studio = listing.studio as {
+    name: string
+    cancellation_policy: string
+    cancellation_fee_cents: number | null
+    payment_type: string
+    cancellation_cutoff_label?: string | null
+    cancellation_notes?: string | null
+  } | null
 
   const price = getEffectivePrice(listing)
 
@@ -268,6 +275,10 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
           <Card className="border-blue-100 bg-blue-50">
             <CardContent className="p-5 text-sm text-blue-800 space-y-1">
               <p className="font-semibold">{studio.name} cancellation policy</p>
+              {studio.cancellation_cutoff_label && (
+                <p>Free cancellation until <strong>{studio.cancellation_cutoff_label}</strong>.</p>
+              )}
+              {studio.cancellation_notes && <p>{studio.cancellation_notes}</p>}
               <p>
                 If you don't show up, <strong>{cancellationFeeDisplay}</strong> is released to the seller
                 from your escrowed payment. The remainder is refunded to you.
