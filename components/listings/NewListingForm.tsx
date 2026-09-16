@@ -21,6 +21,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { CLASS_TYPES, SKILL_LEVELS } from '@/types'
 import type { ClassType, SkillLevel, Profile, Studio } from '@/types'
 import { formatCents } from '@/lib/stripe/helpers'
+import { getRecommendedPrice } from '@/lib/pricing'
 import { createClient } from '@/lib/supabase/client'
 
 const schema = z.object({
@@ -84,6 +85,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ListingFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,6 +115,23 @@ export function NewListingForm({ profile }: NewListingFormProps) {
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     el?.focus?.({ preventScroll: true })
   }
+
+  const recommended = getRecommendedPrice(selectedStudio)
+  const enteredPrice = Number(watch('price_dollars'))
+  const enteredCents = Number.isFinite(enteredPrice) ? Math.round(enteredPrice * 100) : null
+
+  // Only judge the price once it's a real number, so the hint doesn't flicker
+  // while the field is empty or half-typed.
+  const priceVerdict =
+    !recommended || !enteredCents || enteredCents <= 0
+      ? null
+      : enteredCents > recommended.retailMaxCents
+        ? 'over_retail'
+        : enteredCents > recommended.highCents
+          ? 'high'
+          : enteredCents < recommended.lowCents
+            ? 'low'
+            : 'good'
 
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -312,13 +331,49 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         />
         <p className="text-xs text-muted-foreground">
           This is the full amount the buyer pays into escrow.
-          {selectedStudio?.price_min_cents != null && selectedStudio?.price_max_cents != null && (
-            <>
-              {' '}{selectedStudio.name} classes usually run{' '}
-              {formatCents(selectedStudio.price_min_cents)}–{formatCents(selectedStudio.price_max_cents)}.
-            </>
-          )}
         </p>
+
+        {recommended && (
+          <div className="border border-emerald-200 bg-emerald-50 p-3 space-y-2 text-sm">
+            <div className="flex items-baseline justify-between gap-3 flex-wrap">
+              <p className="text-emerald-900">
+                <strong>Recommended: {formatCents(recommended.lowCents)}–{formatCents(recommended.highCents)}</strong>
+              </p>
+              <button
+                type="button"
+                onClick={() => setValue('price_dollars', recommended.suggestedCents / 100, {
+                  shouldValidate: true,
+                })}
+                className="text-xs border border-emerald-400 text-emerald-800 px-2.5 py-1 hover:bg-emerald-100 transition-colors"
+              >
+                Use {formatCents(recommended.suggestedCents)}
+              </button>
+            </div>
+            <p className="text-xs text-emerald-700">
+              {selectedStudio?.name} charges{' '}
+              {formatCents(recommended.retailMinCents)}–{formatCents(recommended.retailMaxCents)} at the door.
+              Pricing below that is what makes a resold spot worth claiming.
+            </p>
+            {priceVerdict === 'over_retail' && (
+              <p className="text-xs text-red-600">
+                That&apos;s more than the studio charges — buyers can book direct for less.
+              </p>
+            )}
+            {priceVerdict === 'high' && (
+              <p className="text-xs text-amber-700">
+                Above the recommended range. It may sit unclaimed.
+              </p>
+            )}
+            {priceVerdict === 'low' && (
+              <p className="text-xs text-emerald-700">
+                Below the recommended range — should go quickly.
+              </p>
+            )}
+            {priceVerdict === 'good' && (
+              <p className="text-xs text-emerald-700">Priced to claim.</p>
+            )}
+          </div>
+        )}
         {errors.price_dollars && <p className="text-sm text-red-500">{errors.price_dollars.message}</p>}
       </div>
 
