@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { formatCents } from '@/lib/stripe/helpers'
+import { shortDateTimeLabel, timestampLabel } from '@/lib/datetime'
 
 interface DisputeProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,7 +30,7 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
   }
 
   const classDate = d.listing?.class_datetime
-    ? new Date(d.listing.class_datetime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    ? shortDateTimeLabel(d.listing.class_datetime)
     : '—'
 
   return (
@@ -85,7 +86,7 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
         )}
         {d.disputed_at && (
           <p className="text-white/30 text-xs">
-            Filed {new Date(d.disputed_at).toLocaleString()}
+            Filed {timestampLabel(d.disputed_at)}
           </p>
         )}
       </div>
@@ -106,14 +107,14 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
               </div>
             )}
             <p className="text-white/30 text-xs">
-              Responded {new Date(d.seller_responded_at).toLocaleString()}
+              Responded {timestampLabel(d.seller_responded_at)}
             </p>
           </>
         ) : d.seller_response_deadline && new Date(d.seller_response_deadline) < new Date() ? (
-          <p className="text-red-400 text-xs">No response — 24h window closed {new Date(d.seller_response_deadline).toLocaleString()}</p>
+          <p className="text-red-400 text-xs">No response — 24h window closed {timestampLabel(d.seller_response_deadline)}</p>
         ) : (
           <p className="text-yellow-400 text-xs">
-            Awaiting response{d.seller_response_deadline ? ` — due ${new Date(d.seller_response_deadline).toLocaleString()}` : ''}
+            Awaiting response{d.seller_response_deadline ? ` — due ${timestampLabel(d.seller_response_deadline)}` : ''}
           </p>
         )}
       </div>

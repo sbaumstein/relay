@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { MapPin, Clock, User, Calendar, ArrowLeft, ShieldCheck, Maximize2 } from 'lucide-react'
+import { MapPin, Clock, User, Calendar, ArrowLeft, ShieldCheck, Maximize2, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ClaimButton } from '@/components/listings/ClaimButton'
@@ -10,8 +10,9 @@ import { Separator } from '@/components/ui/separator'
 import { CLASS_TYPE_COLORS, CLASS_TYPES, SKILL_LEVELS, getSellerStats } from '@/types'
 import { StarRating } from '@/components/ui/StarRating'
 import { formatCents } from '@/lib/stripe/helpers'
-import { getEffectivePrice, DISCOUNT_WINDOW_HOURS } from '@/lib/pricing'
+import { getEffectivePrice, DISCOUNT_WINDOW_HOURS, CONFIRMATION_RELEASE_HOURS } from '@/lib/pricing'
 import type { Listing } from '@/types'
+import { longDateLabel, timeLabel } from '@/lib/datetime'
 
 interface ListingDetailPageProps {
   params: Promise<{ id: string }>
@@ -76,12 +77,8 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const isLoggedIn = !!user
 
   const classDate = new Date(listing.class_datetime)
-  const dateLabel = classDate.toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-  })
-  const timeLabel = classDate.toLocaleTimeString('en-US', {
-    hour: 'numeric', minute: '2-digit',
-  })
+  const dateLabel = longDateLabel(classDate)
+  const timeText = timeLabel(classDate)
 
   const classTypeLabel = CLASS_TYPES.find((t) => t.value === listing.class_type)?.label ?? listing.class_type
   const colorClass = CLASS_TYPE_COLORS[listing.class_type]
@@ -97,6 +94,13 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   } | null
 
   const price = getEffectivePrice(listing)
+
+  // The confirmation screenshot carries the seller's booking details, so it is
+  // released only to someone who has actually claimed the spot, and only once
+  // the class is close enough that they need it to get in.
+  const msUntilClass = classDate.getTime() - Date.now()
+  const withinReleaseWindow = msUntilClass <= CONFIRMATION_RELEASE_HOURS * 60 * 60 * 1000
+  const canSeeConfirmation = isOwner || (userHasClaim && withinReleaseWindow)
 
   const cancellationFeeDisplay = studio
     ? studio.cancellation_policy === 'fixed_fee'
@@ -133,7 +137,18 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             )}
           </div>
           <p className="text-muted-foreground">{studio?.name ?? listing.studio_name}</p>
-          <h1 className="text-3xl font-bold mt-1">{listing.class_name}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-3xl font-bold mt-1">{listing.class_name}</h1>
+            {isOwner && listing.status === 'available' && (
+              <Link
+                href={`/listings/${listing.id}/edit`}
+                className="mt-2 inline-flex items-center gap-1.5 text-sm border px-3 py-1.5 hover:bg-accent transition-colors flex-shrink-0"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -145,7 +160,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 <div>
                   <p className="text-sm font-medium">{dateLabel}</p>
                   <p className="text-sm text-muted-foreground">
-                    {timeLabel}{listing.duration_minutes ? ` · ${listing.duration_minutes} min` : ''}
+                    {timeText}{listing.duration_minutes ? ` · ${listing.duration_minutes} min` : ''}
                   </p>
                 </div>
               </div>
@@ -204,7 +219,11 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
               </div>
 
               {listing.status === 'available' ? (
-                <ClaimButton listing={listing} isLoggedIn={isLoggedIn} isOwner={isOwner} />
+                <ClaimButton
+                  listing={{ ...listing, confirmation_screenshot_url: null }}
+                  isLoggedIn={isLoggedIn}
+                  isOwner={isOwner}
+                />
               ) : isOwner && activeClaim ? (
                 <ConfirmTransferButton claimId={activeClaim.id} currentStatus={activeClaim.status} />
               ) : (
@@ -234,7 +253,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
         </div>
 
         {/* Booking confirmation screenshot — only visible to seller or buyer after claiming */}
-        {listing.confirmation_screenshot_url && (isOwner || userHasClaim) && (
+        {listing.confirmation_screenshot_url && canSeeConfirmation && (
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-3">
@@ -261,11 +280,15 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             </CardContent>
           </Card>
         )}
-        {listing.confirmation_screenshot_url && !isOwner && !userHasClaim && (
+        {listing.confirmation_screenshot_url && !canSeeConfirmation && (
           <Card className="border-dashed">
             <CardContent className="p-5 flex items-center gap-3 text-muted-foreground">
               <ShieldCheck className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm">Booking confirmation is unlocked after you claim this spot.</p>
+              <p className="text-sm">
+                {userHasClaim
+                  ? `Booking confirmation unlocks ${CONFIRMATION_RELEASE_HOURS} hours before class starts.`
+                  : 'Booking confirmation is unlocked after you claim this spot.'}
+              </p>
             </CardContent>
           </Card>
         )}

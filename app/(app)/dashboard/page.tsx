@@ -9,6 +9,7 @@ import { Plus } from 'lucide-react'
 import { CheckInCard } from '@/components/claims/CheckInCard'
 import { DisputeResponseCard } from '@/components/claims/DisputeResponseCard'
 import { expireStaleListings } from '@/lib/expireListings'
+import { monthShort, dayOfMonth } from '@/lib/datetime'
 
 function StatusPill({ status }: { status: string }) {
   const styles: Record<string, { color: string; label: string }> = {
@@ -132,8 +133,8 @@ export default async function DashboardPage() {
               return (
                 <Link key={l.id} href={`/listings/${l.id}`} className="flex items-center gap-4 py-3.5 px-1 border-b border-white/20 hover:bg-white/6 transition-colors group">
                   <div className="w-16 flex-shrink-0 text-center">
-                    <p className="text-lg font-bold text-white leading-none">{classDate.getDate()}</p>
-                    <p className="text-xs text-white/60">{classDate.toLocaleDateString('en-US', { month: 'short' })}</p>
+                    <p className="text-lg font-bold text-white leading-none">{dayOfMonth(classDate)}</p>
+                    <p className="text-xs text-white/60">{monthShort(classDate)}</p>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-medium truncate">{l.class_name}</p>
@@ -176,8 +177,8 @@ export default async function DashboardPage() {
                 <div key={c.id} className="py-3.5 px-1 border-b border-white/20">
                   <Link href={`/listings/${l.id}`} className="flex items-center gap-4 hover:bg-white/6 transition-colors group">
                     <div className="w-16 flex-shrink-0 text-center">
-                      <p className="text-lg font-bold text-white leading-none">{classDate.getDate()}</p>
-                      <p className="text-xs text-white/60">{classDate.toLocaleDateString('en-US', { month: 'short' })}</p>
+                      <p className="text-lg font-bold text-white leading-none">{dayOfMonth(classDate)}</p>
+                      <p className="text-xs text-white/60">{monthShort(classDate)}</p>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{l.class_name}</p>

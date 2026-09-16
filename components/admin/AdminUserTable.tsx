@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Search, Ban, ShieldCheck, ChevronDown } from 'lucide-react'
+import { shortDateLabel } from '@/lib/datetime'
 
 export interface AdminUserRow {
   id: string
@@ -153,7 +154,7 @@ export function AdminUserTable({ users }: { users: AdminUserRow[] }) {
                     </div>
                     <p className="text-white/50 text-xs truncate">{u.email}</p>
                     <p className="text-white/30 text-xs mt-0.5">
-                      joined {new Date(u.created_at).toLocaleDateString()}
+                      joined {shortDateLabel(u.created_at)}
                     </p>
                   </div>
 

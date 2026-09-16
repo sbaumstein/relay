@@ -32,7 +32,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ listings: data })
+  // These are all unclaimed listings, so the seller's booking confirmation must
+  // never travel with them.
+  const listings = (data ?? []).map(({ confirmation_screenshot_url: _omit, ...rest }) => rest)
+
+  return NextResponse.json({ listings })
 }
 
 export async function POST(request: NextRequest) {

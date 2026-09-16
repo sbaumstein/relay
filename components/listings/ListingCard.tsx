@@ -4,6 +4,7 @@ import type { Listing, SellerStats } from '@/types'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getEffectivePrice } from '@/lib/pricing'
 import { StarRating } from '@/components/ui/StarRating'
+import { weekdayShort, monthShort, dayOfMonth, timeLabel } from '@/lib/datetime'
 
 interface ListingCardProps {
   listing: Listing
@@ -12,8 +13,7 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, sellerStats }: ListingCardProps) {
   const classDate = new Date(listing.class_datetime)
-  const day = classDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-  const time = classDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const time = timeLabel(classDate)
   const classTypeLabel = CLASS_TYPES.find((t) => t.value === listing.class_type)?.label ?? listing.class_type
   const skillLabel = SKILL_LEVELS.find((s) => s.value === listing.skill_level)?.label ?? listing.skill_level
   const stats = sellerStats ?? getSellerStats(0, 0)
@@ -26,13 +26,13 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
         {/* Date column */}
         <div className="w-14 sm:w-20 flex-shrink-0 text-center">
           <p className="text-[10px] text-white/70 uppercase tracking-widest hidden sm:block">
-            {classDate.toLocaleDateString('en-US', { weekday: 'short' })}
+            {weekdayShort(classDate)}
           </p>
           <p className="text-xl sm:text-2xl font-bold text-white leading-none">
-            {classDate.getDate()}
+            {dayOfMonth(classDate)}
           </p>
           <p className="text-[10px] text-white/75 mt-0.5">
-            {classDate.toLocaleDateString('en-US', { month: 'short' })}
+            {monthShort(classDate)}
           </p>
           <p className="text-[10px] sm:text-xs text-white/70 mt-1 font-medium">{time}</p>
         </div>

@@ -79,3 +79,10 @@ export function getRecommendedPrice(studio: StudioPricing | null | undefined): P
     retailMaxCents: max,
   }
 }
+
+/**
+ * How long before class the buyer can see the seller's booking confirmation.
+ * Held back until then so the screenshot isn't useful to anyone who claims a
+ * spot purely to harvest it.
+ */
+export const CONFIRMATION_RELEASE_HOURS = 2
