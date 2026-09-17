@@ -18,7 +18,6 @@ export interface AdminUserRow {
   stars: number
   baseStars: number
   rate: number
-  holdHours: number
   sellerTotal: number
   buyerTotal: number
   buyerCompleted: number

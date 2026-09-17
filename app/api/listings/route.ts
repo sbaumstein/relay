@@ -1,43 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendListingPostedEmail } from '@/lib/resend/client'
-import type { ClassType, NewListingFormData, SkillLevel } from '@/types'
+import type { NewListingFormData, SkillLevel } from '@/types'
 import { isBanned, BANNED_MESSAGE } from '@/lib/admin/ban'
-
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const classType = searchParams.get('class_type') as ClassType | null
-  const isFree = searchParams.get('is_free')
-  const neighborhood = searchParams.get('neighborhood')
-  const limit = Math.min(Number(searchParams.get('limit') ?? 50), 100)
-  const offset = Number(searchParams.get('offset') ?? 0)
-
-  const supabase = await createClient()
-
-  let query = supabase
-    .from('listings')
-    .select('*, seller:profiles!seller_id(id, full_name, email)')
-    .eq('status', 'available')
-    .gte('class_datetime', new Date().toISOString())
-    .order('class_datetime', { ascending: true })
-    .range(offset, offset + limit - 1)
-
-  if (classType) query = query.eq('class_type', classType)
-  if (isFree === 'true') query = query.eq('is_free', true)
-  if (neighborhood) query = query.eq('neighborhood', neighborhood)
-
-  const { data, error } = await query
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  // These are all unclaimed listings, so the seller's booking confirmation must
-  // never travel with them.
-  const listings = (data ?? []).map(({ confirmation_screenshot_url: _omit, ...rest }) => rest)
-
-  return NextResponse.json({ listings })
-}
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()

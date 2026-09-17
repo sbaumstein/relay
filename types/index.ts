@@ -170,14 +170,6 @@ export interface NewListingFormData {
   discount_price_cents?: number | null
 }
 
-export interface ListingFilters {
-  class_type?: ClassType
-  is_free?: boolean
-  neighborhood?: string
-  date_from?: string
-  date_to?: string
-}
-
 export const CLASS_TYPES: { value: ClassType; label: string }[] = [
   { value: 'yoga', label: 'Yoga' },
   { value: 'pilates', label: 'Pilates' },
@@ -232,5 +224,3 @@ export const SKILL_LEVELS: { value: SkillLevel; label: string }[] = [
   { value: 'advanced', label: 'Advanced' },
 ]
 
-
-export const PLATFORM_FEE_PERCENT = 10

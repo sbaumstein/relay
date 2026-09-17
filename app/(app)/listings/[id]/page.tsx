@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { MapPin, Clock, User, Calendar, ArrowLeft, ShieldCheck, Maximize2, Pencil } from 'lucide-react'
+import { MapPin, User, Calendar, ArrowLeft, ShieldCheck, Maximize2, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ClaimButton } from '@/components/listings/ClaimButton'

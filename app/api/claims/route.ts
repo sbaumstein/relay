@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
 import { sendClaimEmails } from '@/lib/resend/client'
-import { getSellerStats } from '@/types'
+import { DEFAULT_HOLD_HOURS } from '@/lib/autoRelease'
 import { getEffectivePrice } from '@/lib/pricing'
 import { isBanned, BANNED_MESSAGE } from '@/lib/admin/ban'
 
@@ -58,21 +58,9 @@ export async function POST(request: NextRequest) {
       : chargeCents // full_class = buyer loses everything
     : 0
 
-  // Compute seller star rating to determine hold time
-  const { data: sellerClaims } = await supabase
-    .from('claims')
-    .select('status')
-    .eq('seller_id', listing.seller_id)
-
-  const sellerTotal = sellerClaims?.length ?? 0
-  const sellerCompleted = sellerClaims?.filter(
-    (c) => c.status === 'completed' || c.status === 'auto_released'
-  ).length ?? 0
-  const { holdHours } = getSellerStats(sellerTotal, sellerCompleted)
-
-  // Escrow expires based on seller's star rating
+  // Escrow settles a flat DEFAULT_HOLD_HOURS after the class for everyone.
   const classTime = new Date(listing.class_datetime)
-  const expiresAt = new Date(classTime.getTime() + holdHours * 60 * 60 * 1000)
+  const expiresAt = new Date(classTime.getTime() + DEFAULT_HOLD_HOURS * 60 * 60 * 1000)
 
   const serviceSupabase = createServiceClient()
 

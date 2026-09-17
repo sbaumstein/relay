@@ -13,8 +13,6 @@ export const SORT_OPTIONS = [
   { value: 'price_high', label: 'Priciest first' },
 ] as const
 
-export type SortOption = (typeof SORT_OPTIONS)[number]['value']
-
 /** Native select keeps the good mobile picker; the chevron is drawn on top. */
 function Dropdown({
   value, onChange, label, children, className = '',

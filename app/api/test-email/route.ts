@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resend, isEmailAllowed } from '@/lib/resend/client'
 
 export async function POST(request: NextRequest) {
+  // Dev-only Resend smoke test — nothing in the app calls this.
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
+  }
+
   const { email } = await request.json()
 
   if (!isEmailAllowed(email))

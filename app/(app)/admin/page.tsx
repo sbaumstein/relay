@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getSellerStats } from '@/types'
 import { AdminDisputeList } from '@/components/admin/AdminDisputeList'
@@ -72,7 +72,6 @@ export default async function AdminPage() {
       stars: stats.stars,
       baseStars: base.stars,
       rate: stats.rate,
-      holdHours: stats.holdHours,
       sellerTotal: asSellerAll.length,
       buyerTotal: asBuyer.length,
       buyerCompleted,
