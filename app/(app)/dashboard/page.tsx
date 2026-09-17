@@ -6,7 +6,6 @@ import { CLASS_TYPES, getSellerStats } from '@/types'
 import { StarRating } from '@/components/ui/StarRating'
 import type { Listing, Claim, Profile } from '@/types'
 import { Plus } from 'lucide-react'
-import { CheckInCard } from '@/components/claims/CheckInCard'
 import { DisputeResponseCard } from '@/components/claims/DisputeResponseCard'
 import { expireStaleListings } from '@/lib/expireListings'
 import { monthShort, dayOfMonth } from '@/lib/datetime'
@@ -60,7 +59,7 @@ export default async function DashboardPage() {
       .gt('class_datetime', holdCutoff)
       .order('class_datetime', { ascending: true }),
     supabase.from('claims')
-      .select('*, listing:listings(*, duration_minutes), checkin_responded_at, checkin_response')
+      .select('*, listing:listings(*, duration_minutes)')
       .eq('claimer_id', user.id)
       .not('status', 'in', '("completed","auto_released","refunded","dispute_won","dispute_lost")')
       .order('created_at', { ascending: false }),
@@ -174,13 +173,9 @@ export default async function DashboardPage() {
               const l = c.listing as Listing & { duration_minutes?: number } | undefined
               if (!l) return null
               const classDate = new Date(l.class_datetime)
-              const classEnd = new Date(classDate.getTime() + (l.duration_minutes ?? 60) * 60 * 1000)
-              const now = new Date()
-              const isPending = c.status === 'pending_confirmation'
-              const classInFuture = classDate > now
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const alreadyResponded = !!(c as any).checkin_responded_at
-              const needsCheckin = isPending && classEnd < now && !classInFuture && !alreadyResponded
+              // Nothing to do on the happy path — escrow settles on its own.
+              // The only action is flagging a problem.
+              const canReport = c.status === 'pending_confirmation' || c.status === 'claimed'
               return (
                 <div key={c.id} className="py-3.5 px-1 border-b border-white/20">
                   <Link href={`/listings/${l.id}`} className="flex items-center gap-4 hover:bg-white/6 transition-colors group">
@@ -198,19 +193,13 @@ export default async function DashboardPage() {
                       <span className="text-white/40 group-hover:text-white/75 transition-colors">→</span>
                     </div>
                   </Link>
-                  {isPending && classInFuture && (
-                    <Link href={`/claims/${c.id}/dispute`} className="text-xs text-red-400/70 hover:text-red-400 mt-2 inline-block ml-20 transition-colors">
-                      File a dispute
+                  {canReport && (
+                    <Link
+                      href={`/claims/${c.id}/dispute`}
+                      className="text-xs text-white/40 hover:text-red-400 mt-2 inline-block ml-20 transition-colors"
+                    >
+                      Something went wrong?
                     </Link>
-                  )}
-                  {needsCheckin && (
-                    <div className="mt-2 ml-20">
-                      <CheckInCard claimId={c.id} className={l.class_name} />
-                    </div>
-                  )}
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {alreadyResponded && isPending && (c as any).checkin_response === true && (
-                    <p className="text-xs text-emerald-400 mt-1 ml-20">Checked in — escrow releasing to seller</p>
                   )}
                 </div>
               )

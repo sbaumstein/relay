@@ -3,7 +3,6 @@ import { MapPin, Clock, User, Calendar, ArrowLeft, ShieldCheck, Maximize2, Penci
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ClaimButton } from '@/components/listings/ClaimButton'
-import { ConfirmTransferButton } from '@/components/listings/ConfirmTransferButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -37,27 +36,15 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
   // Check if the current user has an active claim on this listing
   let userHasClaim = false
-  let activeClaim: { id: string; status: string } | null = null
   if (user) {
     const { data: userClaim } = await supabase
       .from('claims')
-      .select('id, status')
+      .select('id')
       .eq('listing_id', id)
       .eq('claimer_id', user.id)
       .not('status', 'in', '("disputed","dispute_won","dispute_lost","refunded")')
       .maybeSingle()
     userHasClaim = !!userClaim
-
-    // Also fetch the claim from the seller's perspective
-    if (!userClaim && user.id === (listingData as { seller_id: string })?.seller_id) {
-      const { data: sellerClaim } = await supabase
-        .from('claims')
-        .select('id, status')
-        .eq('listing_id', id)
-        .in('status', ['pending_confirmation', 'claimed'])
-        .maybeSingle()
-      activeClaim = sellerClaim
-    }
   }
 
   if (!listingData) notFound()
@@ -225,8 +212,14 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   isLoggedIn={isLoggedIn}
                   isOwner={isOwner}
                 />
-              ) : isOwner && activeClaim ? (
-                <ConfirmTransferButton claimId={activeClaim.id} currentStatus={activeClaim.status} />
+              ) : isOwner && listing.status === 'claimed' ? (
+                <div className="py-3 text-sm">
+                  <p className="font-medium text-emerald-600">Claimed</p>
+                  <p className="text-muted-foreground mt-1">
+                    Send the buyer your booking transfer. Escrow releases to you{' '}
+                    {DEFAULT_HOLD_HOURS} hours after the class unless they report a problem.
+                  </p>
+                </div>
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <p className="font-medium">This spot is no longer available</p>
