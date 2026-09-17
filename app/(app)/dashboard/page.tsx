@@ -10,6 +10,7 @@ import { CheckInCard } from '@/components/claims/CheckInCard'
 import { DisputeResponseCard } from '@/components/claims/DisputeResponseCard'
 import { expireStaleListings } from '@/lib/expireListings'
 import { monthShort, dayOfMonth } from '@/lib/datetime'
+import { releaseMaturedClaims, DEFAULT_HOLD_HOURS } from '@/lib/autoRelease'
 
 function StatusPill({ status }: { status: string }) {
   const styles: Record<string, { color: string; label: string }> = {
@@ -41,18 +42,22 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login?redirectTo=/dashboard')
 
-  // Mark any of this user's past listings as expired before rendering
+  // Settle anything that has run its course before reading, so the page never
+  // shows a deal that should already have concluded.
   await expireStaleListings(supabase, user.id)
+  await releaseMaturedClaims(user.id)
+
+  // Once escrow has released there is nothing left to act on, so a listing
+  // drops off the profile at the same point.
+  const holdCutoff = new Date(Date.now() - DEFAULT_HOLD_HOURS * 60 * 60 * 1000).toISOString()
 
   const [{ data: profile }, { data: myListings }, { data: myClaims }, { data: sellerClaims }, { data: disputesAgainstMe }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
-    // Only spots someone has actually claimed and that haven't happened yet —
-    // these are the ones still needing a handover.
     supabase.from('listings')
       .select('*')
       .eq('seller_id', user.id)
-      .eq('status', 'claimed')
-      .gt('class_datetime', new Date().toISOString())
+      .in('status', ['available', 'claimed'])
+      .gt('class_datetime', holdCutoff)
       .order('class_datetime', { ascending: true }),
     supabase.from('claims')
       .select('*, listing:listings(*, duration_minutes), checkin_responded_at, checkin_response')
@@ -122,11 +127,11 @@ export default async function DashboardPage() {
       {/* My Listings */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/60 uppercase tracking-widest">Claimed spots to hand over ({myListings?.length ?? 0})</p>
+          <p className="text-xs text-white/60 uppercase tracking-widest">My listings ({myListings?.length ?? 0})</p>
           <Link href="/listings/new" className="text-xs text-white/70 hover:text-white transition-colors">+ New</Link>
         </div>
         {!myListings || myListings.length === 0 ? (
-          <p className="text-white/60 text-sm py-8 text-center border border-white/20">Nothing claimed yet</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No listings yet</p>
         ) : (
           <div className="border-t border-white/20">
             {myListings.map((listing) => {
@@ -158,10 +163,10 @@ export default async function DashboardPage() {
       {/* My Claims */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/60 uppercase tracking-widest">Active claimed spots ({myClaims?.length ?? 0})</p>
+          <p className="text-xs text-white/60 uppercase tracking-widest">My claims ({myClaims?.length ?? 0})</p>
         </div>
         {!myClaims || myClaims.length === 0 ? (
-          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No active claimed spots</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No claims yet</p>
         ) : (
           <div className="border-t border-white/20">
             {myClaims.map((claim) => {

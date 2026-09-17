@@ -7,10 +7,14 @@ import { getSellerStats } from '@/types'
 import { AdminDisputeList } from '@/components/admin/AdminDisputeList'
 import { AdminUserTable, type AdminUserRow } from '@/components/admin/AdminUserTable'
 import { getAdminUser } from '@/lib/admin/auth'
+import { releaseMaturedClaims } from '@/lib/autoRelease'
 
 export default async function AdminPage() {
   const admin = await getAdminUser()
   if (!admin) redirect('/browse')
+
+  // Settle matured escrow first so the totals below reflect reality.
+  await releaseMaturedClaims()
 
   const service = createServiceClient()
 
