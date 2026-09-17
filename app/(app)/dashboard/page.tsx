@@ -10,6 +10,7 @@ import { DisputeResponseCard } from '@/components/claims/DisputeResponseCard'
 import { expireStaleListings } from '@/lib/expireListings'
 import { monthShort, dayOfMonth } from '@/lib/datetime'
 import { releaseMaturedClaims, DEFAULT_HOLD_HOURS } from '@/lib/autoRelease'
+import { getDisputeWindow } from '@/lib/disputeWindow'
 
 function StatusPill({ status }: { status: string }) {
   const styles: Record<string, { color: string; label: string }> = {
@@ -63,13 +64,22 @@ export default async function DashboardPage() {
       .eq('claimer_id', user.id)
       .not('status', 'in', '("completed","auto_released","refunded","dispute_won","dispute_lost")')
       .order('created_at', { ascending: false }),
-    supabase.from('claims').select('status').eq('seller_id', user.id),
+    supabase.from('claims').select('id, status, listing_id').eq('seller_id', user.id),
     supabase.from('claims')
       .select('*, listing:listings(class_name, studio_name)')
       .eq('seller_id', user.id)
       .eq('status', 'disputed')
       .order('disputed_at', { ascending: true }),
   ])
+
+  // Map each of the seller's listings to its live claim, so they can report a
+  // problem from their own side of the deal.
+  const sellerClaimByListing: Record<string, string> = {}
+  for (const c of sellerClaims ?? []) {
+    if (c.status === 'pending_confirmation' || c.status === 'claimed') {
+      sellerClaimByListing[c.listing_id] = c.id
+    }
+  }
 
   const p = profile as Profile | null
   const sellerTotal = sellerClaims?.length ?? 0
@@ -138,21 +148,31 @@ export default async function DashboardPage() {
               const classDate = new Date(l.class_datetime)
               const typeLabel = CLASS_TYPES.find((t) => t.value === l.class_type)?.label
               return (
-                <Link key={l.id} href={`/listings/${l.id}`} className="flex items-center gap-4 py-3.5 px-1 border-b border-white/20 hover:bg-white/6 transition-colors group">
-                  <div className="w-16 flex-shrink-0 text-center">
-                    <p className="text-lg font-bold text-white leading-none">{dayOfMonth(classDate)}</p>
-                    <p className="text-xs text-white/60">{monthShort(classDate)}</p>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium truncate">{l.class_name}</p>
-                    <p className="text-xs text-white/70 truncate">{l.studio_name} · {typeLabel}</p>
-                  </div>
-                  <div className="flex-shrink-0 flex items-center gap-3">
-                    <StatusPill status={l.status} />
-                    <p className="text-white font-semibold text-sm">{formatCents(l.price_cents)}</p>
-                    <span className="text-white/40 group-hover:text-white/75 transition-colors">→</span>
-                  </div>
-                </Link>
+                <div key={l.id} className="py-3.5 px-1 border-b border-white/20">
+                  <Link href={`/listings/${l.id}`} className="flex items-center gap-4 hover:bg-white/6 transition-colors group">
+                    <div className="w-16 flex-shrink-0 text-center">
+                      <p className="text-lg font-bold text-white leading-none">{dayOfMonth(classDate)}</p>
+                      <p className="text-xs text-white/60">{monthShort(classDate)}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium truncate">{l.class_name}</p>
+                      <p className="text-xs text-white/70 truncate">{l.studio_name} · {typeLabel}</p>
+                    </div>
+                    <div className="flex-shrink-0 flex items-center gap-3">
+                      <StatusPill status={l.status} />
+                      <p className="text-white font-semibold text-sm">{formatCents(l.price_cents)}</p>
+                      <span className="text-white/40 group-hover:text-white/75 transition-colors">→</span>
+                    </div>
+                  </Link>
+                  {sellerClaimByListing[l.id] && getDisputeWindow(l).isOpen && (
+                    <Link
+                      href={`/claims/${sellerClaimByListing[l.id]}/dispute?as=seller`}
+                      className="text-xs text-white/40 hover:text-red-400 mt-2 inline-block ml-20 transition-colors"
+                    >
+                      Something went wrong?
+                    </Link>
+                  )}
+                </div>
               )
             })}
           </div>
@@ -174,8 +194,9 @@ export default async function DashboardPage() {
               if (!l) return null
               const classDate = new Date(l.class_datetime)
               // Nothing to do on the happy path — escrow settles on its own.
-              // The only action is flagging a problem.
-              const canReport = c.status === 'pending_confirmation' || c.status === 'claimed'
+              // Reporting is only possible while the dispute window is open.
+              const active = c.status === 'pending_confirmation' || c.status === 'claimed'
+              const canReport = active && getDisputeWindow(l).isOpen
               return (
                 <div key={c.id} className="py-3.5 px-1 border-b border-white/20">
                   <Link href={`/listings/${l.id}`} className="flex items-center gap-4 hover:bg-white/6 transition-colors group">
@@ -195,7 +216,7 @@ export default async function DashboardPage() {
                   </Link>
                   {canReport && (
                     <Link
-                      href={`/claims/${c.id}/dispute`}
+                      href={`/claims/${c.id}/dispute?as=buyer`}
                       className="text-xs text-white/40 hover:text-red-400 mt-2 inline-block ml-20 transition-colors"
                     >
                       Something went wrong?

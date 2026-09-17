@@ -1,11 +1,12 @@
 import { createServiceClient } from '@/lib/supabase/server'
+import { getDisputeWindow, DISPUTE_WINDOW_HOURS } from '@/lib/disputeWindow'
 
 /**
- * Escrow settles this long after the class for everyone, regardless of seller
- * rating. The star-based expires_at is deliberately ignored: a single, stated
- * window is easier for both sides to reason about than a hold that varies.
+ * Escrow settles when the dispute window closes: neither side raised anything,
+ * so the class is taken to have gone fine. Flat for everyone regardless of
+ * seller rating — one stated window is easier for both sides to reason about.
  */
-export const DEFAULT_HOLD_HOURS = 48
+export const DEFAULT_HOLD_HOURS = DISPUTE_WINDOW_HOURS
 
 /** Claims still holding money that a silent buyer should conclude. */
 const RELEASABLE = ['pending_confirmation', 'claimed']
@@ -20,11 +21,10 @@ const RELEASABLE = ['pending_confirmation', 'claimed']
 export async function releaseMaturedClaims(sellerOrClaimerId?: string) {
   const service = createServiceClient()
   const now = new Date()
-  const cutoff = new Date(now.getTime() - DEFAULT_HOLD_HOURS * 60 * 60 * 1000)
 
   let query = service
     .from('claims')
-    .select('id, listing:listings(class_datetime)')
+    .select('id, listing:listings(class_datetime, duration_minutes)')
     .in('status', RELEASABLE)
 
   if (sellerOrClaimerId) {
@@ -35,9 +35,14 @@ export async function releaseMaturedClaims(sellerOrClaimerId?: string) {
   if (error || !candidates || candidates.length === 0) return 0
 
   const due = candidates.filter((c) => {
-    const listing = c.listing as unknown as { class_datetime?: string } | null
+    const listing = c.listing as unknown as
+      { class_datetime?: string; duration_minutes?: number | null } | null
     if (!listing?.class_datetime) return false
-    return new Date(listing.class_datetime) <= cutoff
+    // Measured from when the class ends, not when it starts.
+    return getDisputeWindow(
+      { class_datetime: listing.class_datetime, duration_minutes: listing.duration_minutes },
+      now,
+    ).hasClosed
   })
 
   if (due.length === 0) return 0

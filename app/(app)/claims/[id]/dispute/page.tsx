@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { AlertCircle } from 'lucide-react'
 import { EvidenceUpload } from '@/components/claims/EvidenceUpload'
 
-const DISPUTE_REASONS = [
+const BUYER_REASONS = [
   'I couldn\'t get in — my name wasn\'t on the list',
   'The booking confirmation was fake or invalid',
   'The seller became unresponsive after I paid',
@@ -19,9 +19,20 @@ const DISPUTE_REASONS = [
   'Other',
 ]
 
+const SELLER_REASONS = [
+  'The buyer never showed up to the class',
+  'The buyer went but the studio charged me a no-show fee anyway',
+  'The buyer became unresponsive before the class',
+  'The buyer asked me to cancel after the studio\'s cutoff',
+  'Other',
+]
+
 export default function DisputePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  // The server decides who you actually are; this only picks the wording.
+  const asSeller = useSearchParams().get('as') === 'seller'
+  const reasons = asSeller ? SELLER_REASONS : BUYER_REASONS
   const [selected, setSelected] = useState('')
   const [details, setDetails] = useState('')
   const [notes, setNotes] = useState('')
@@ -56,7 +67,7 @@ export default function DisputePage() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-2">File a Dispute</h1>
+      <h1 className="text-2xl font-bold mb-2">Report a problem</h1>
       <p className="text-muted-foreground mb-6">
         Tell us what went wrong. We'll review and resolve it as quickly as possible.
       </p>
@@ -65,15 +76,15 @@ export default function DisputePage() {
         <CardContent className="py-4 flex gap-3">
           <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-amber-800">
-            Only file a dispute if there is a genuine problem with the listing.
-            Repeated false disputes will result in your account being banned.
+            Only report a problem if something genuinely went wrong. Repeated
+            false reports will result in your account being banned.
           </p>
         </CardContent>
       </Card>
 
       <div className="space-y-3 mb-6">
         <Label>What went wrong?</Label>
-        {DISPUTE_REASONS.map((r) => (
+        {reasons.map((r) => (
           <button
             key={r}
             type="button"
@@ -122,7 +133,7 @@ export default function DisputePage() {
       </div>
 
       <p className="text-xs text-muted-foreground mb-6">
-        The seller will be notified and has 24 hours to respond with their side before we decide.
+        The other side will be notified and has 24 hours to respond before we decide.
       </p>
 
       <div className="flex gap-3">
