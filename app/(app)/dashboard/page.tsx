@@ -46,11 +46,14 @@ export default async function DashboardPage() {
 
   const [{ data: profile }, { data: myListings }, { data: myClaims }, { data: sellerClaims }, { data: disputesAgainstMe }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
+    // Only spots someone has actually claimed and that haven't happened yet —
+    // these are the ones still needing a handover.
     supabase.from('listings')
       .select('*')
       .eq('seller_id', user.id)
-      .not('status', 'in', '("expired","cancelled")')
-      .order('created_at', { ascending: false }),
+      .eq('status', 'claimed')
+      .gt('class_datetime', new Date().toISOString())
+      .order('class_datetime', { ascending: true }),
     supabase.from('claims')
       .select('*, listing:listings(*, duration_minutes), checkin_responded_at, checkin_response')
       .eq('claimer_id', user.id)
@@ -119,11 +122,11 @@ export default async function DashboardPage() {
       {/* My Listings */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/60 uppercase tracking-widest">Active listings ({myListings?.length ?? 0})</p>
+          <p className="text-xs text-white/60 uppercase tracking-widest">Claimed spots to hand over ({myListings?.length ?? 0})</p>
           <Link href="/listings/new" className="text-xs text-white/70 hover:text-white transition-colors">+ New</Link>
         </div>
         {!myListings || myListings.length === 0 ? (
-          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No active listings</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20">Nothing claimed yet</p>
         ) : (
           <div className="border-t border-white/20">
             {myListings.map((listing) => {
