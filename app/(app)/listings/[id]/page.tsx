@@ -11,6 +11,7 @@ import { CLASS_TYPE_COLORS, CLASS_TYPES, SKILL_LEVELS, getSellerStats } from '@/
 import { StarRating } from '@/components/ui/StarRating'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getEffectivePrice, DISCOUNT_WINDOW_HOURS, CONFIRMATION_RELEASE_HOURS } from '@/lib/pricing'
+import { DEFAULT_HOLD_HOURS } from '@/lib/autoRelease'
 import type { Listing } from '@/types'
 import { longDateLabel, timeLabel } from '@/lib/datetime'
 
@@ -245,7 +246,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   <StarRating stars={sellerStats.stars} total={sellerStats.total} showLabel />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Escrow releases {sellerStats.holdHours}hr after class
+                  Escrow releases {DEFAULT_HOLD_HOURS}hr after class
                 </p>
               </div>
             </CardContent>

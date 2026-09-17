@@ -210,7 +210,7 @@ export function AdminUserTable({ users }: { users: AdminUserRow[] }) {
                         ))}
                       </div>
                       <span className="text-xs text-white/30">
-                        base {u.baseStars}★ → shown {u.stars}★ · {u.holdHours}hr hold
+                        base {u.baseStars}★ → shown {u.stars}★
                       </span>
                     </div>
 

@@ -95,7 +95,7 @@ export default async function DashboardPage() {
           <p className="text-sm text-white/70">
             {sellerStats.total < 5
               ? `${5 - sellerStats.total} more to unlock rating`
-              : `${sellerStats.rate}% · escrow holds ${sellerStats.holdHours}hr`}
+              : `${sellerStats.rate}% · escrow holds ${DEFAULT_HOLD_HOURS}hr`}
           </p>
         </div>
       </div>
