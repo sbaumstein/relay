@@ -13,10 +13,13 @@ import { releaseMaturedClaims, DEFAULT_HOLD_HOURS } from '@/lib/autoRelease'
 import { getDisputeWindow } from '@/lib/disputeWindow'
 
 function StatusPill({ status }: { status: string }) {
+  // The stored names are historical: pending_confirmation dates from when a
+  // seller had to confirm the handover. That step is gone, so it is simply the
+  // claimed state now, and pending_payment is the one still settling.
   const styles: Record<string, { color: string; label: string }> = {
     available:            { color: 'text-emerald-400 border-emerald-400/30', label: 'Available' },
-    pending_payment:      { color: 'text-yellow-400 border-yellow-400/30',  label: 'Pending payment' },
-    pending_confirmation: { color: 'text-yellow-400 border-yellow-400/30',  label: 'Pending' },
+    pending_payment:      { color: 'text-yellow-400 border-yellow-400/30',  label: 'Pending' },
+    pending_confirmation: { color: 'text-blue-400 border-blue-400/30',      label: 'Claimed' },
     claimed:              { color: 'text-blue-400 border-blue-400/30',      label: 'Claimed' },
     completed:            { color: 'text-emerald-400 border-emerald-400/30',label: 'Completed' },
     auto_released:        { color: 'text-emerald-400 border-emerald-400/30',label: 'Completed' },
