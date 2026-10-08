@@ -242,13 +242,13 @@ export function NewListingForm({ profile }: NewListingFormProps) {
       {/* Progress */}
       <div className="h-0.5 bg-white/10 rounded-full overflow-hidden mb-10">
         <div
-          className="h-full bg-brand transition-all duration-300"
+          className="h-full bg-white transition-all duration-300"
           style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
         />
       </div>
 
       <div className="mb-8">
-        <p className="text-xs text-brand/80 uppercase tracking-widest mb-2">
+        <p className="text-xs text-white/40 uppercase tracking-widest mb-2">
           Step {step + 1} of {STEPS.length}
         </p>
         <h2 className="text-2xl font-bold text-white">{STEPS[step].title}</h2>
