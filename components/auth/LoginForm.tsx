@@ -8,10 +8,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -19,6 +17,10 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
+
+const labelClass = 'text-xs text-white/50 uppercase tracking-widest'
+const inputClass =
+  'bg-white/5 border-white/20 rounded-none h-11 text-white placeholder:text-white/30 focus-visible:border-white/50 focus-visible:ring-0'
 
 export function LoginForm() {
   const [loading, setLoading] = useState(false)
@@ -64,56 +66,60 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to post or claim a spot</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
+    <div className="w-full max-w-md mx-auto border border-white/20 rounded-xl p-5 text-white">
+      <p className={labelClass}>Sign in</p>
+      <h1 className="text-2xl font-semibold mt-2">Welcome back</h1>
+      <p className="text-sm text-white/60 mt-1">Post or claim a spot in seconds.</p>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 mt-7">
+        <div className="space-y-2">
+          <Label htmlFor="email" className={labelClass}>Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            className={inputClass}
+            {...register('email')}
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className={labelClass}>Password</Label>
+            <Link href="/forgot-password" className="text-xs text-white/50 hover:text-white transition-colors">
+              Forgot password?
+            </Link>
           </div>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            className={inputClass}
+            {...register('password')}
+          />
+          {errors.password && (
+            <p className="text-sm text-red-500">{errors.password.message}</p>
+          )}
+        </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link href="/forgot-password" className="text-xs text-muted-foreground hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
-            )}
-          </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-white text-black font-semibold py-3 text-sm uppercase tracking-widest hover:bg-white/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        >
+          {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="underline">
-            Sign up
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+      <p className="text-center text-sm text-white/50 mt-6">
+        Don&apos;t have an account?{' '}
+        <Link href="/signup" className="text-white hover:underline">
+          Sign up
+        </Link>
+      </p>
+    </div>
   )
 }

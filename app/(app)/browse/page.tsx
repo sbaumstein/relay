@@ -105,7 +105,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
     <div className="flex gap-6">
       {/* Listings list */}
       <div className="flex-1 min-w-0">
-        <div className="border-t border-white/20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-5 gap-y-8">
           {listings.map((listing) => {
             const raw = statsMap[listing.seller_id] ?? { total: 0, completed: 0 }
             const stats = getSellerStats(raw.total, raw.completed)
@@ -116,7 +116,10 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
 
       {/* Sticky map */}
       <div className="w-[400px] flex-shrink-0 hidden lg:block">
-        <div className="sticky top-20" style={{ height: 'calc(100vh - 160px)' }}>
+        <div
+          className="sticky top-20 rounded-xl overflow-hidden border border-white/10"
+          style={{ height: 'calc(100vh - 160px)' }}
+        >
           <MapView listings={mapListings} />
         </div>
       </div>
@@ -143,19 +146,19 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
       <Suspense
         fallback={
           <div className="flex gap-6">
-            <div className="flex-1 border-t border-white/20">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-5 gap-y-8">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="flex items-center gap-6 py-4 px-2 border-b border-white/20">
-                  <div className="w-24 h-14 bg-white/8 animate-pulse" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-24 bg-white/8 animate-pulse" />
-                    <div className="h-4 w-48 bg-white/8 animate-pulse" />
+                <div key={i}>
+                  <div className="aspect-[4/3] rounded-xl bg-white/8 animate-pulse" />
+                  <div className="mt-3 space-y-2">
+                    <div className="h-4 w-32 bg-white/8 rounded animate-pulse" />
+                    <div className="h-3 w-40 bg-white/8 rounded animate-pulse" />
+                    <div className="h-3 w-16 bg-white/8 rounded animate-pulse" />
                   </div>
-                  <div className="w-16 h-8 bg-white/8 animate-pulse" />
                 </div>
               ))}
             </div>
-            <div className="w-[400px] flex-shrink-0 hidden lg:block bg-white/8 animate-pulse" style={{ height: 'calc(100vh - 160px)' }} />
+            <div className="w-[400px] flex-shrink-0 hidden lg:block bg-white/8 rounded-xl animate-pulse" style={{ height: 'calc(100vh - 160px)' }} />
           </div>
         }
       >

@@ -1,12 +1,9 @@
 import { notFound } from 'next/navigation'
-import { MapPin, User, Calendar, ArrowLeft, ShieldCheck, Maximize2, Pencil } from 'lucide-react'
+import { ArrowLeft, ShieldCheck, Maximize2, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ClaimButton } from '@/components/listings/ClaimButton'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { CLASS_TYPE_COLORS, CLASS_TYPES, getSellerStats } from '@/types'
+import { CLASS_TYPES, getSellerStats } from '@/types'
 import { StarRating } from '@/components/ui/StarRating'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getEffectivePrice, DISCOUNT_WINDOW_HOURS, CONFIRMATION_RELEASE_HOURS } from '@/lib/pricing'
@@ -69,7 +66,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
   const timeText = timeLabel(classDate)
 
   const classTypeLabel = CLASS_TYPES.find((t) => t.value === listing.class_type)?.label ?? listing.class_type
-  const colorClass = CLASS_TYPE_COLORS[listing.class_type]
 
   const studio = listing.studio as {
     name: string
@@ -99,9 +95,9 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     <div className="max-w-2xl mx-auto">
       <Link
         href="/browse"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6"
+        className="inline-flex items-center gap-1.5 text-xs text-white/50 uppercase tracking-widest hover:text-white transition-colors mb-6"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-3.5 w-3.5" />
         Back to browse
       </Link>
 
@@ -109,22 +105,27 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
         {/* Header */}
         <div>
           <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colorClass}`}>
+            <span className="text-xs text-white/50 uppercase tracking-widest">
               {classTypeLabel}
             </span>
             {listing.status !== 'available' && (
-              <Badge variant="secondary">
-                {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
-              </Badge>
+              <>
+                <span className="text-white/25 text-xs">·</span>
+                <span className="text-xs text-white/50 uppercase tracking-widest">
+                  {listing.status}
+                </span>
+              </>
             )}
           </div>
-          <p className="text-muted-foreground">{studio?.name ?? listing.studio_name}</p>
           <div className="flex items-start justify-between gap-4">
-            <h1 className="text-3xl font-bold mt-1">{listing.class_name}</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-white leading-tight">{listing.class_name}</h1>
+              <p className="text-white/60 mt-1">{studio?.name ?? listing.studio_name}</p>
+            </div>
             {isOwner && listing.status === 'available' && (
               <Link
                 href={`/listings/${listing.id}/edit`}
-                className="mt-2 inline-flex items-center gap-1.5 text-sm border px-3 py-1.5 hover:bg-accent transition-colors flex-shrink-0"
+                className="mt-1 inline-flex items-center gap-1.5 text-sm text-white border border-white/20 rounded-xl px-3 py-1.5 hover:bg-white/10 transition-colors flex-shrink-0"
               >
                 <Pencil className="h-3.5 w-3.5" />
                 Edit
@@ -135,177 +136,176 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Details */}
-          <Card>
-            <CardContent className="p-5 space-y-3">
-              <div className="flex items-start gap-2">
-                <Calendar className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">{dateLabel}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {timeText}{listing.duration_minutes ? ` · ${listing.duration_minutes} min` : ''}
-                  </p>
-                </div>
+          <div className="border border-white/20 rounded-xl p-5 space-y-4">
+            <div>
+              <p className="text-xs text-white/50 uppercase tracking-widest">When</p>
+              <p className="text-white font-bold mt-1">{dateLabel}</p>
+              <p className="text-sm text-white/60">
+                {timeText}{listing.duration_minutes ? ` · ${listing.duration_minutes} min` : ''}
+              </p>
+            </div>
+
+            <div className="border-t border-white/15 pt-4">
+              <p className="text-xs text-white/50 uppercase tracking-widest">Where</p>
+              <p className="text-white font-bold mt-1">{listing.neighborhood ?? 'Location'}</p>
+              <p className="text-sm text-white/60">{listing.address}</p>
+            </div>
+
+            {listing.instructor_name && (
+              <div className="border-t border-white/15 pt-4">
+                <p className="text-xs text-white/50 uppercase tracking-widest">Instructor</p>
+                <p className="text-white font-bold mt-1">{listing.instructor_name}</p>
               </div>
-
-              <Separator />
-
-              <div className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">{listing.neighborhood ?? 'Location'}</p>
-                  <p className="text-sm text-muted-foreground">{listing.address}</p>
-                </div>
-              </div>
-
-              {listing.instructor_name && (
-                <>
-                  <Separator />
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                    <p className="text-sm">{listing.instructor_name}</p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </div>
 
           {/* Price + Claim */}
-          <Card>
-            <CardContent className="p-5 space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Price</p>
-                <div className="flex items-baseline gap-2">
-                  <p className={`text-2xl font-bold ${price.discounted ? 'text-emerald-500' : ''}`}>
-                    {formatCents(price.cents)}
-                  </p>
-                  {price.discounted && (
-                    <p className="text-sm text-muted-foreground line-through">
-                      {formatCents(price.originalCents!)}
-                    </p>
-                  )}
-                </div>
+          <div className="border border-white/20 rounded-xl p-5 space-y-4">
+            <div>
+              <p className="text-xs text-white/50 uppercase tracking-widest">Price</p>
+              <div className="flex items-baseline gap-2 mt-1">
+                <p className={`text-3xl font-bold ${price.discounted ? 'text-emerald-400' : 'text-white'}`}>
+                  {formatCents(price.cents)}
+                </p>
                 {price.discounted && (
-                  <p className="text-xs text-emerald-600 mt-0.5">Last-minute price</p>
-                )}
-                {!price.discounted && listing.discount_price_cents != null && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Drops to {formatCents(listing.discount_price_cents)} within{' '}
-                    {DISCOUNT_WINDOW_HOURS} hours of class
-                  </p>
-                )}
-                {studio && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    No-show fee to seller: {cancellationFeeDisplay}
+                  <p className="text-sm text-white/50 line-through">
+                    {formatCents(price.originalCents!)}
                   </p>
                 )}
               </div>
-
-              {listing.status === 'available' ? (
-                <ClaimButton
-                  listing={{ ...listing, confirmation_screenshot_url: null }}
-                  isLoggedIn={isLoggedIn}
-                  isOwner={isOwner}
-                />
-              ) : isOwner && listing.status === 'claimed' ? (
-                <div className="py-3 text-sm">
-                  <p className="font-medium text-emerald-600">Claimed</p>
-                  <p className="text-muted-foreground mt-1">
-                    Send the buyer your booking details. You get paid{' '}
-                    {DEFAULT_HOLD_HOURS} hours after the class unless they report a problem.
-                  </p>
-                </div>
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  <p className="font-medium">This spot is no longer available</p>
-                  <Link href="/browse" className="text-sm underline mt-1 block">
-                    Browse other listings
-                  </Link>
-                </div>
+              {price.discounted && (
+                <p className="text-xs text-emerald-400 mt-1">Last-minute price</p>
               )}
+              {!price.discounted && listing.discount_price_cents != null && (
+                <p className="text-xs text-white/50 mt-1">
+                  Drops to {formatCents(listing.discount_price_cents)} within{' '}
+                  {DISCOUNT_WINDOW_HOURS} hours of class
+                </p>
+              )}
+              {studio && (
+                <p className="text-xs text-white/50 mt-1">
+                  No-show fee to seller: {cancellationFeeDisplay}
+                </p>
+              )}
+            </div>
 
-              {/* Seller reputation */}
-              <Separator />
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Posted by {listing.seller?.full_name ?? 'Anonymous'}
-                  </span>
-                  <StarRating stars={sellerStats.stars} total={sellerStats.total} showLabel />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Seller is paid {DEFAULT_HOLD_HOURS}hr after class
+            {listing.status === 'available' ? (
+              <ClaimButton
+                listing={{ ...listing, confirmation_screenshot_url: null }}
+                isLoggedIn={isLoggedIn}
+                isOwner={isOwner}
+              />
+            ) : isOwner && listing.status === 'claimed' ? (
+              <div className="border-t border-white/15 pt-4">
+                <p className="text-xs text-emerald-400 uppercase tracking-widest">Claimed</p>
+                <p className="text-sm text-white/60 mt-1">
+                  Send the buyer your booking details. You get paid{' '}
+                  {DEFAULT_HOLD_HOURS} hours after the class unless they report a problem.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <div className="border-t border-white/15 pt-4">
+                <p className="text-white font-bold">This spot is no longer available</p>
+                <Link
+                  href="/browse"
+                  className="text-sm text-white/60 underline hover:text-white transition-colors mt-1 inline-block"
+                >
+                  Browse other listings
+                </Link>
+              </div>
+            )}
+
+            {/* Seller reputation */}
+            <div className="border-t border-white/15 pt-4 space-y-1">
+              <p className="text-xs text-white/50 uppercase tracking-widest">Seller</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm text-white">
+                  {listing.seller?.full_name ?? 'Anonymous'}
+                </span>
+                <StarRating stars={sellerStats.stars} total={sellerStats.total} showLabel />
+              </div>
+              <p className="text-xs text-white/50">
+                Seller is paid {DEFAULT_HOLD_HOURS}hr after class
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Booking confirmation screenshot — only visible to seller or buyer after claiming */}
         {listing.confirmation_screenshot_url && canSeeConfirmation && (
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                <h2 className="font-semibold">Booking confirmation</h2>
-              </div>
-              <a
-                href={listing.confirmation_screenshot_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block w-fit"
-                title="Open full size"
-              >
-                <img
-                  src={listing.confirmation_screenshot_url}
-                  alt="Booking confirmation"
-                  className="rounded-lg border max-h-64 object-contain transition-opacity group-hover:opacity-80"
-                />
-                <span className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-                  <Maximize2 className="h-3 w-3" />
-                  Tap to view full size
-                </span>
-              </a>
-            </CardContent>
-          </Card>
+          <div className="border border-white/20 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <h2 className="text-xs text-white/50 uppercase tracking-widest">
+                Booking confirmation
+              </h2>
+            </div>
+            <a
+              href={listing.confirmation_screenshot_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block w-fit"
+              title="Open full size"
+            >
+              <img
+                src={listing.confirmation_screenshot_url}
+                alt="Booking confirmation"
+                className="rounded-xl border border-white/15 max-h-64 object-contain transition-opacity group-hover:opacity-80"
+              />
+              <span className="mt-2 inline-flex items-center gap-1.5 text-xs text-white/50 group-hover:text-white transition-colors">
+                <Maximize2 className="h-3 w-3" />
+                Tap to view full size
+              </span>
+            </a>
+          </div>
         )}
         {listing.confirmation_screenshot_url && !canSeeConfirmation && (
-          <Card className="border-dashed">
-            <CardContent className="p-5 flex items-center gap-3 text-muted-foreground">
-              <ShieldCheck className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm">
-                {userHasClaim
-                  ? `Booking confirmation unlocks ${CONFIRMATION_RELEASE_HOURS} hours before class starts.`
-                  : 'Booking confirmation is unlocked after you claim this spot.'}
-              </p>
-            </CardContent>
-          </Card>
+          <div className="border border-dashed border-white/20 rounded-xl p-5 flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5 flex-shrink-0 text-white/50" />
+            <p className="text-sm text-white/60">
+              {userHasClaim
+                ? `Booking confirmation unlocks ${CONFIRMATION_RELEASE_HOURS} hours before class starts.`
+                : 'Booking confirmation is unlocked after you claim this spot.'}
+            </p>
+          </div>
         )}
 
         {/* Studio cancellation policy */}
         {studio && (
-          <Card className="border-blue-100 bg-blue-50">
-            <CardContent className="p-5 text-sm text-blue-800 space-y-1">
-              <p className="font-semibold">{studio.name} cancellation policy</p>
+          <div className="border border-white/20 rounded-xl p-5 space-y-3">
+            <p className="text-xs text-white/50 uppercase tracking-widest">
+              {studio.name} cancellation policy
+            </p>
+            <div className="space-y-2 text-sm text-white/60">
               {studio.cancellation_cutoff_label && (
-                <p>Free cancellation until <strong>{studio.cancellation_cutoff_label}</strong>.</p>
+                <p>
+                  Free cancellation until{' '}
+                  <span className="font-bold text-white">{studio.cancellation_cutoff_label}</span>.
+                </p>
               )}
               {studio.cancellation_notes && <p>{studio.cancellation_notes}</p>}
               <p>
-                If you don&apos;t show up, <strong>{cancellationFeeDisplay}</strong> goes to the
+                If you don&apos;t show up,{' '}
+                <span className="font-bold text-red-500">{cancellationFeeDisplay}</span> goes to the
                 seller. The rest comes back to you.
               </p>
-              <p>Payment type: {studio.payment_type === 'prepaid' ? 'Prepaid' : 'Pay in person'}</p>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="border-t border-white/15 pt-3">
+              <p className="text-xs text-white/50 uppercase tracking-widest">Payment type</p>
+              <p className="text-white font-bold mt-1">
+                {studio.payment_type === 'prepaid' ? 'Prepaid' : 'Pay in person'}
+              </p>
+            </div>
+          </div>
         )}
 
         {listing.description && (
-          <Card>
-            <CardContent className="p-5">
-              <h2 className="font-semibold mb-2">Notes from seller</h2>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{listing.description}</p>
-            </CardContent>
-          </Card>
+          <div className="border border-white/20 rounded-xl p-5">
+            <h2 className="text-xs text-white/50 uppercase tracking-widest mb-2">
+              Notes from seller
+            </h2>
+            <p className="text-sm text-white/60 whitespace-pre-wrap">{listing.description}</p>
+          </div>
         )}
       </div>
     </div>
