@@ -1,28 +1,17 @@
 import Link from 'next/link'
 import { CLASS_TYPES, getSellerStats } from '@/types'
-import type { ClassType, Listing, SellerStats } from '@/types'
+import type { Listing, SellerStats } from '@/types'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getEffectivePrice } from '@/lib/pricing'
 import { StarRating } from '@/components/ui/StarRating'
 import { weekdayShort, monthShort, dayOfMonth, timeLabel } from '@/lib/datetime'
 
 /**
- * Listings have no photography, so the card's visual slot is built from the
- * class type instead — a tint per discipline, with the date as the subject.
- * Muted on purpose: the grid should read as one surface, not ten.
+ * Listings have no photography, so the card's visual slot is a single warm
+ * tint with the studio as its subject. The class type is named in the corner
+ * label, so colour doesn't need to encode it.
  */
-const CLASS_TYPE_TINT: Record<ClassType, string> = {
-  spinning:   'from-red-900/55 to-red-950/20',
-  hiit:       'from-red-800/50 to-red-950/20',
-  boxing:     'from-orange-900/55 to-orange-950/20',
-  strength:   'from-orange-800/45 to-orange-950/20',
-  dance:      'from-rose-900/50 to-rose-950/20',
-  barre:      'from-rose-800/45 to-rose-950/20',
-  yoga:       'from-amber-900/50 to-amber-950/20',
-  pilates:    'from-amber-800/45 to-amber-950/20',
-  meditation: 'from-yellow-900/45 to-yellow-950/20',
-  other:      'from-neutral-800/60 to-neutral-900/20',
-}
+const TILE_TINT = 'from-orange-900/55 to-orange-950/20'
 
 interface ListingCardProps {
   listing: Listing
@@ -35,7 +24,6 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
     CLASS_TYPES.find((t) => t.value === listing.class_type)?.label ?? listing.class_type
   const stats = sellerStats ?? getSellerStats(0, 0)
   const price = getEffectivePrice(listing)
-  const tint = CLASS_TYPE_TINT[listing.class_type] ?? CLASS_TYPE_TINT.other
   const logoUrl = listing.studio?.logo_url ?? null
   // A long name would wrap to two lines and crowd the short tile.
   const wordmarkSize =
@@ -45,7 +33,7 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
     <Link href={`/listings/${listing.id}`} className="group block">
       {/* Visual — the studio is the subject; the date is supporting detail. */}
       <div
-        className={`relative aspect-[5/2] rounded-xl overflow-hidden bg-gradient-to-br ${tint} border border-white/10`}
+        className={`relative aspect-[5/2] rounded-xl overflow-hidden bg-gradient-to-br ${TILE_TINT} border border-white/10`}
       >
         <span className="absolute top-2.5 left-3 text-[10px] uppercase tracking-widest text-white/60">
           {classTypeLabel}
