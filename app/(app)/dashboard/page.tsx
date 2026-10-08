@@ -105,7 +105,7 @@ export default async function DashboardPage() {
       .eq('claimer_id', user.id)
       .not('status', 'in', '("completed","auto_released","refunded","dispute_won","dispute_lost")')
       .order('created_at', { ascending: false }),
-    supabase.from('claims').select('id, status, listing_id').eq('seller_id', user.id),
+    supabase.from('claims').select('id, status, listing_id, seller_payout_cents').eq('seller_id', user.id),
     supabase.from('claims')
       .select('*, listing:listings(class_name, studio_name)')
       .eq('seller_id', user.id)
@@ -142,6 +142,11 @@ export default async function DashboardPage() {
   ).length ?? 0
   const sellerStats = getSellerStats(sellerTotal, sellerCompleted)
 
+  // Money held in escrow that is on its way to this seller.
+  const incomingCents = (sellerClaims ?? [])
+    .filter((c) => c.status === 'pending_confirmation' || c.status === 'claimed')
+    .reduce((sum, c) => sum + (c.seller_payout_cents ?? 0), 0)
+
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
@@ -155,11 +160,10 @@ export default async function DashboardPage() {
         <p className="text-xs text-white/60 uppercase tracking-widest mb-3">Seller reputation</p>
         <div className="flex items-center justify-between">
           <StarRating stars={sellerStats.stars} total={sellerStats.total} showLabel />
-          <p className="text-sm text-white/70">
-            {sellerStats.total < 5
-              ? `${5 - sellerStats.total} more to unlock rating`
-              : `${sellerStats.rate}% · escrow holds ${DEFAULT_HOLD_HOURS}hr`}
-          </p>
+          <div className="text-right">
+            <p className="text-xs text-white/60 uppercase tracking-widest">Incoming funds</p>
+            <p className="text-lg font-bold text-white leading-tight">{formatCents(incomingCents)}</p>
+          </div>
         </div>
       </div>
 
