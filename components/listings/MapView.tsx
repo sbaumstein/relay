@@ -123,7 +123,7 @@ export function MapView({ listings }: MapViewProps) {
       </div>
       <style>{`
         .relay-popup .leaflet-popup-content-wrapper {
-          background: #191216;
+          background: #20272b;
           color: white;
           border: 1px solid rgba(255,255,255,0.15);
           border-radius: 2px;
@@ -131,7 +131,7 @@ export function MapView({ listings }: MapViewProps) {
           padding: 8px 12px;
         }
         .relay-popup .leaflet-popup-content { margin: 0; }
-        .relay-popup .leaflet-popup-tip { background: #191216; }
+        .relay-popup .leaflet-popup-tip { background: #20272b; }
       `}</style>
     </div>
   )
