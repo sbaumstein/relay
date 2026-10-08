@@ -47,14 +47,7 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
               </span>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-white/50 truncate mt-0.5">
-            {listing.is_free ? (
-              <span className="text-emerald-400">Free</span>
-            ) : (
-              <span className="text-white/70">{formatCents(price.cents)}</span>
-            )}
-            {meta && ` · ${meta}`}
-          </p>
+          <p className="text-xs sm:text-sm text-white/50 truncate mt-0.5">{meta}</p>
         </div>
 
         {/* Seller standing, once there is one worth showing */}
@@ -63,6 +56,23 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
             <StarRating stars={stats.stars} total={stats.total} />
           </div>
         )}
+
+        <div className="flex-shrink-0">
+          <span
+            className={`inline-block rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors ${
+              listing.is_free
+                ? 'border-emerald-400/40 text-emerald-400 group-hover:bg-emerald-400 group-hover:text-black'
+                : 'border-white/25 text-white group-hover:bg-white group-hover:text-black'
+            }`}
+          >
+            {listing.is_free ? 'Free' : formatCents(price.cents)}
+          </span>
+          {price.discounted && (
+            <p className="text-[10px] text-white/40 line-through text-center mt-0.5">
+              {formatCents(price.originalCents!)}
+            </p>
+          )}
+        </div>
 
         <ChevronRight className="h-4 w-4 flex-shrink-0 text-white/25 group-hover:text-white/60 transition-colors" />
       </div>
