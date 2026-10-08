@@ -58,13 +58,9 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
         )}
 
         <div className="flex-shrink-0">
-          <span
-            className={`inline-block rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors ${
-              listing.is_free
-                ? 'border-emerald-400/40 text-emerald-400 group-hover:bg-emerald-400 group-hover:text-black'
-                : 'border-white/25 text-white group-hover:bg-white group-hover:text-black'
-            }`}
-          >
+          {/* Every price reads the same, free or not — it's the amount that
+              changes, not what the box means. */}
+          <span className="inline-block rounded-lg border border-emerald-400/40 text-emerald-400 px-3 py-1.5 text-sm font-semibold transition-colors group-hover:bg-emerald-400 group-hover:text-neutral-900 group-hover:border-emerald-400">
             {listing.is_free ? 'Free' : formatCents(price.cents)}
           </span>
           {price.discounted && (

@@ -182,7 +182,7 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
 
       <Link
         href="/listings/new"
-        className="fixed bottom-8 right-8 h-14 w-14 bg-white text-black shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-50"
+        className="fixed bottom-8 right-8 h-14 w-14 bg-white text-neutral-900 shadow-lg flex items-center justify-center hover:bg-emerald-400 hover:scale-105 transition-transform z-50"
       >
         <Plus className="h-6 w-6" />
       </Link>

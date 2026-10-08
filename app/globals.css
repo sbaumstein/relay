@@ -4,6 +4,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Brand accent — every call to action resolves here, so the app's colour can
+   be retuned from these three values. */
+@theme {
+  /* Soft rose rather than a neon pink: warm against the dark surface, and
+     still carries near-black text at an accessible contrast. */
+  --color-brand: #f7a8c4;
+  --color-brand-soft: #fbd0de;
+  /* The page behind everything — a warm plum-black, not a neutral grey. */
+  --color-surface: #191216;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

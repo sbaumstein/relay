@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#1a1a1a] text-white">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-surface text-white">
       <a href="/" className="text-xl font-bold uppercase tracking-widest mb-8">Relay</a>
       <div className="w-full max-w-md border border-white/20 rounded-xl p-5">
         <p className={labelClass}>Account recovery</p>
@@ -78,7 +78,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black font-semibold rounded-lg py-3 text-sm uppercase tracking-widest hover:bg-white/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            className="w-full bg-white text-neutral-900 font-semibold rounded-lg py-3 text-sm uppercase tracking-widest hover:bg-emerald-400 transition-colors transition-colors disabled:opacity-50 disabled:pointer-events-none"
           >
             {loading ? 'Updating…' : 'Update password'}
           </button>

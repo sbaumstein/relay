@@ -4,7 +4,7 @@ import { AddToHomeScreen } from '@/components/ui/AddToHomeScreen'
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen bg-black text-white overflow-hidden">
+    <div className="relative min-h-screen bg-surface text-white overflow-hidden">
 
       {/* Background video cycling */}
       <VideoBackground />
@@ -40,7 +40,7 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <Link
             href="/browse"
-            className="w-48 text-center bg-white text-black font-semibold py-3 px-8 hover:bg-white/90 transition-colors text-sm uppercase tracking-widest"
+            className="w-48 text-center bg-white text-neutral-900 font-semibold py-3 px-8 hover:bg-emerald-400 transition-colors text-sm uppercase tracking-widest"
           >
             Browse Spots
           </Link>
