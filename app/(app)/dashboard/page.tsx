@@ -8,7 +8,7 @@ import type { Listing, Claim, Profile } from '@/types'
 import { Plus } from 'lucide-react'
 import { DisputeResponseCard } from '@/components/claims/DisputeResponseCard'
 import { expireStaleListings } from '@/lib/expireListings'
-import { monthShort, dayOfMonth } from '@/lib/datetime'
+import { monthShort, dayOfMonth, shortDateTimeLabel } from '@/lib/datetime'
 import { releaseMaturedClaims, DEFAULT_HOLD_HOURS } from '@/lib/autoRelease'
 import { getDisputeWindow } from '@/lib/disputeWindow'
 import { HistorySection } from '@/components/dashboard/HistorySection'
@@ -105,7 +105,9 @@ export default async function DashboardPage() {
       .eq('claimer_id', user.id)
       .not('status', 'in', '("completed","auto_released","refunded","dispute_won","dispute_lost")')
       .order('created_at', { ascending: false }),
-    supabase.from('claims').select('id, status, listing_id, seller_payout_cents').eq('seller_id', user.id),
+    supabase.from('claims')
+      .select('id, status, listing_id, seller_payout_cents, listing:listings(class_datetime, duration_minutes)')
+      .eq('seller_id', user.id),
     supabase.from('claims')
       .select('*, listing:listings(class_name, studio_name)')
       .eq('seller_id', user.id)
@@ -142,10 +144,19 @@ export default async function DashboardPage() {
   ).length ?? 0
   const sellerStats = getSellerStats(sellerTotal, sellerCompleted)
 
-  // Money held in escrow that is on its way to this seller.
-  const incomingCents = (sellerClaims ?? [])
-    .filter((c) => c.status === 'pending_confirmation' || c.status === 'claimed')
-    .reduce((sum, c) => sum + (c.seller_payout_cents ?? 0), 0)
+  // Money held in escrow that is on its way to this seller, and when the
+  // soonest of it settles.
+  const escrowed = (sellerClaims ?? []).filter(
+    (c) => c.status === 'pending_confirmation' || c.status === 'claimed'
+  )
+  const incomingCents = escrowed.reduce((sum, c) => sum + (c.seller_payout_cents ?? 0), 0)
+
+  const releaseDates = escrowed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((c) => (c as any).listing)
+    .filter((l) => l?.class_datetime)
+    .map((l) => getDisputeWindow(l).closesAt.getTime())
+  const nextRelease = releaseDates.length > 0 ? new Date(Math.min(...releaseDates)) : null
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -163,6 +174,11 @@ export default async function DashboardPage() {
           <div className="text-right">
             <p className="text-xs text-white/60 uppercase tracking-widest">Incoming funds</p>
             <p className="text-lg font-bold text-white leading-tight">{formatCents(incomingCents)}</p>
+            {nextRelease && (
+              <p className="text-xs text-white/50 mt-0.5">
+                {escrowed.length > 1 ? 'Next release' : 'Releases'} {shortDateTimeLabel(nextRelease)}
+              </p>
+            )}
           </div>
         </div>
       </div>
