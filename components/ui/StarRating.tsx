@@ -22,7 +22,7 @@ export function StarRating({ stars, total, showLabel = false, size = 'sm' }: Sta
         {[1, 2, 3, 4, 5].map((i) => (
           <Star
             key={i}
-            className={`${iconSize} ${i <= stars ? 'fill-white text-white' : 'fill-white/15 text-white/15'}`}
+            className={`${iconSize} ${i <= stars ? 'fill-brand text-brand' : 'fill-white/15 text-white/15'}`}
           />
         ))}
       </div>

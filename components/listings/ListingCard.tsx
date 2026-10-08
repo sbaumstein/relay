@@ -42,7 +42,7 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
           <div className="flex items-center gap-2">
             <p className="text-white font-semibold truncate">{listing.class_name}</p>
             {price.discounted && (
-              <span className="flex-shrink-0 text-[10px] uppercase tracking-widest text-white/50">
+              <span className="flex-shrink-0 text-[10px] uppercase tracking-widest text-brand">
                 Last minute
               </span>
             )}

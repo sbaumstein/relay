@@ -7,10 +7,11 @@
 /* Brand accent — every call to action resolves here, so the app's colour can
    be retuned from these three values. */
 @theme {
-  /* Soft rose rather than a neon pink: warm against the dark surface, and
-     still carries near-black text at an accessible contrast. */
-  --color-brand: #f7a8c4;
-  --color-brand-soft: #fbd0de;
+  /* A dusty lavender: desaturated enough to sit quietly next to the emerald
+     "go" colour, warm enough not to read as cold grey-blue on the plum
+     surface. Swap these two values to retune the whole app. */
+  --color-brand: #b7aec9;
+  --color-brand-soft: #d6d0e2;
   /* The page behind everything — a warm plum-black, not a neutral grey. */
   --color-surface: #191216;
 }
