@@ -46,6 +46,7 @@ Without the key, the address field falls back to a plain text input so the app s
 ```bash
 curl -X POST http://localhost:3000/api/seed
 ```
+https://supabase.com/dashboard/project/gdqzrxlhhuzbbjfheihf
 
 ### If the app stops working (ENOTFOUND error)
 Supabase pauses free-tier projects after ~1 week of inactivity.
