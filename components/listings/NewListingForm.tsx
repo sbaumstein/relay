@@ -285,7 +285,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
           <div className="pt-1 space-y-1.5">
             <p className="text-xs text-white/50 uppercase tracking-widest">Recommended</p>
             <div className="flex items-baseline gap-3 flex-wrap">
-              <p className="text-3xl font-bold text-white leading-tight">
+              <p className="text-xl font-bold text-white leading-tight">
                 {formatCents(recommended.lowCents)}–{formatCents(recommended.highCents)}
               </p>
               <button
