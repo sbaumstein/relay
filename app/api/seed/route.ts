@@ -241,7 +241,22 @@ export async function POST() {
     .from('profiles')
     .upsert({ id: seedUserId, email: seedEmail, full_name: 'Demo User' })
 
-  const rows = listings.map((l) => ({ ...l, seller_id: seedUserId, status: 'available' }))
+  // The fixture dates are fixed points; shift the whole set so the earliest
+  // class lands tomorrow. Keeps the spread and times, and stops the seed
+  // rotting out of the browse window as time passes.
+  const DAY_MS = 24 * 60 * 60 * 1000
+  const earliest = Math.min(...listings.map((l) => new Date(l.class_datetime).getTime()))
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  // Whole days only, so each class keeps its time of day.
+  const shiftMs = Math.ceil((tomorrow.getTime() - earliest) / DAY_MS) * DAY_MS
+
+  const rows = listings.map((l) => ({
+    ...l,
+    class_datetime: new Date(new Date(l.class_datetime).getTime() + shiftMs).toISOString(),
+    seller_id: seedUserId,
+    status: 'available',
+  }))
 
   const { error } = await supabase.from('listings').insert(rows)
 
