@@ -151,6 +151,10 @@ export default async function DashboardPage() {
   )
   const incomingCents = escrowed.reduce((sum, c) => sum + (c.seller_payout_cents ?? 0), 0)
 
+  const boughtCount = (pastClaims ?? []).filter(
+    (c) => c.status === 'completed' || c.status === 'auto_released'
+  ).length
+
   const releaseDates = escrowed
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((c) => (c as any).listing)
@@ -166,21 +170,31 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-bold text-white">{p?.full_name ?? user.email}</h1>
       </div>
 
-      {/* Reputation */}
-      <div className="border border-white/20 p-5 mb-10">
-        <p className="text-xs text-white/60 uppercase tracking-widest mb-3">Seller reputation</p>
-        <div className="flex items-center justify-between">
-          <StarRating stars={sellerStats.stars} total={sellerStats.total} showLabel />
-          <div className="text-right">
-            <p className="text-xs text-white/60 uppercase tracking-widest">Incoming funds</p>
-            <p className="text-lg font-bold text-white leading-tight">{formatCents(incomingCents)}</p>
-            {nextRelease && (
-              <p className="text-xs text-white/50 mt-0.5">
-                {escrowed.length > 1 ? 'Next release' : 'Releases'} {shortDateTimeLabel(nextRelease)}
-              </p>
-            )}
+      {/* Rating */}
+      <div className="border border-white/20 rounded-2xl p-5 mb-10">
+        <p className="text-xs text-white/60 uppercase tracking-widest mb-3">Rating</p>
+        <StarRating stars={sellerStats.stars} total={sellerStats.total} size="md" showLabel />
+
+        <div className="grid grid-cols-3 divide-x divide-white/15 border-t border-white/15 mt-5 pt-4">
+          <div className="pr-4">
+            <p className="text-[10px] uppercase tracking-widest text-white/50">Sold</p>
+            <p className="text-xl font-bold text-white leading-tight mt-0.5">{sellerCompleted}</p>
+          </div>
+          <div className="px-4">
+            <p className="text-[10px] uppercase tracking-widest text-white/50">Bought</p>
+            <p className="text-xl font-bold text-white leading-tight mt-0.5">{boughtCount}</p>
+          </div>
+          <div className="pl-4">
+            <p className="text-[10px] uppercase tracking-widest text-white/50">Incoming</p>
+            <p className="text-xl font-bold text-white leading-tight mt-0.5">{formatCents(incomingCents)}</p>
           </div>
         </div>
+
+        {nextRelease && (
+          <p className="text-xs text-white/50 mt-3">
+            {escrowed.length > 1 ? 'Next release' : 'Releases'} {shortDateTimeLabel(nextRelease)}
+          </p>
+        )}
       </div>
 
       {/* Disputes filed against me — highest priority, time-sensitive */}

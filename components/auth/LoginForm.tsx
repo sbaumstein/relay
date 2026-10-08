@@ -67,7 +67,7 @@ export function LoginForm() {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your Workout Exchange account</CardDescription>
+        <CardDescription>Sign in to post or claim a spot</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

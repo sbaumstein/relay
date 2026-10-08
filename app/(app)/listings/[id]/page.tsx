@@ -173,7 +173,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
           <Card>
             <CardContent className="p-5 space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">Class price (escrowed)</p>
+                <p className="text-sm text-muted-foreground">Price</p>
                 <div className="flex items-baseline gap-2">
                   <p className={`text-2xl font-bold ${price.discounted ? 'text-emerald-500' : ''}`}>
                     {formatCents(price.cents)}
@@ -210,7 +210,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 <div className="py-3 text-sm">
                   <p className="font-medium text-emerald-600">Claimed</p>
                   <p className="text-muted-foreground mt-1">
-                    Send the buyer your booking transfer. Escrow releases to you{' '}
+                    Send the buyer your booking details. You get paid{' '}
                     {DEFAULT_HOLD_HOURS} hours after the class unless they report a problem.
                   </p>
                 </div>
@@ -233,7 +233,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                   <StarRating stars={sellerStats.stars} total={sellerStats.total} showLabel />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Escrow releases {DEFAULT_HOLD_HOURS}hr after class
+                  Seller is paid {DEFAULT_HOLD_HOURS}hr after class
                 </p>
               </div>
             </CardContent>
@@ -291,8 +291,8 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
               )}
               {studio.cancellation_notes && <p>{studio.cancellation_notes}</p>}
               <p>
-                If you don't show up, <strong>{cancellationFeeDisplay}</strong> is released to the seller
-                from your escrowed payment. The remainder is refunded to you.
+                If you don&apos;t show up, <strong>{cancellationFeeDisplay}</strong> goes to the
+                seller. The rest comes back to you.
               </p>
               <p>Payment type: {studio.payment_type === 'prepaid' ? 'Prepaid' : 'Pay in person'}</p>
             </CardContent>

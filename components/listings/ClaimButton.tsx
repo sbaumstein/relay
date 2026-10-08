@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCents } from '@/lib/stripe/helpers'
+import { DISPUTE_WINDOW_HOURS } from '@/lib/disputeWindow'
 import { getEffectivePrice } from '@/lib/pricing'
 import type { Listing } from '@/types'
 import { ShieldCheck } from 'lucide-react'
@@ -41,11 +42,11 @@ export function ClaimButton({ listing, isLoggedIn, isOwner }: ClaimButtonProps) 
           <CardContent className="p-4 text-sm text-emerald-800 space-y-1">
             <div className="flex items-center gap-2 font-semibold">
               <ShieldCheck className="h-4 w-4" />
-              <span>Payment escrowed!</span>
+              <span>You&apos;re in!</span>
             </div>
             <p>
-              Your {formatCents(price.cents)} is held securely. It releases to the seller
-              24 hours after the class. Contact them to arrange booking transfer.
+              Your {formatCents(price.cents)} is held safely until after the class.
+              Message the seller to get the booking details.
             </p>
             <p className="font-medium">{listing.seller?.email}</p>
           </CardContent>
@@ -91,8 +92,8 @@ export function ClaimButton({ listing, isLoggedIn, isOwner }: ClaimButtonProps) 
       <div className="flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-emerald-600" />
         <p>
-          Your payment is held in escrow and automatically released to the seller 24 hours
-          after the class. File a dispute before class time if anything goes wrong.
+          Your payment is held safely and goes to the seller {DISPUTE_WINDOW_HOURS} hours
+          after the class. If anything goes wrong, you can report it up to then.
         </p>
       </div>
     </div>

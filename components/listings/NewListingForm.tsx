@@ -22,22 +22,23 @@ import type { ClassType, Profile, Studio } from '@/types'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getRecommendedPrice } from '@/lib/pricing'
 import { createClient } from '@/lib/supabase/client'
+import { ArrowLeft } from 'lucide-react'
 
 const schema = z.object({
-  studio_id: z.string().min(1, 'Studio is required'),
-  class_name: z.string().min(1, 'Class name is required'),
+  studio_id: z.string({ error: 'Pick a studio' }).min(1, 'Pick a studio'),
+  class_name: z.string({ error: 'Class name is required' }).min(1, 'Class name is required'),
   instructor_name: z.string().optional(),
   class_type: z.enum([
     'yoga', 'pilates', 'spinning', 'barre', 'hiit',
     'boxing', 'strength', 'dance', 'meditation', 'other',
-  ] as [ClassType, ...ClassType[]]),
+  ] as [ClassType, ...ClassType[]], { error: 'Pick a class type' }),
   description: z.string().optional(),
-  class_date: z.string().min(1, 'Date is required'),
-  class_time: z.string().min(1, 'Time is required'),
+  class_date: z.string({ error: 'Date is required' }).min(1, 'Date is required'),
+  class_time: z.string({ error: 'Time is required' }).min(1, 'Time is required'),
   duration_minutes: z.coerce.number().optional(),
-  address: z.string().min(1, 'Address is required'),
+  address: z.string({ error: 'Address is required' }).min(1, 'Address is required'),
   neighborhood: z.string().optional(),
-  price_dollars: z.coerce.number().min(1, 'Price is required'),
+  price_dollars: z.coerce.number({ error: 'Price is required' }).min(1, 'Price is required'),
   discount_dollars: z.union([z.coerce.number(), z.literal('')]).optional(),
 }).refine(
   (d) => {
@@ -49,6 +50,22 @@ const schema = z.object({
 
 type ListingFormValues = z.infer<typeof schema>
 
+type FieldName = keyof ListingFormValues
+
+/**
+ * One question per screen. `fields` is what must validate before Next will
+ * advance, so a mistake is caught on the step that caused it.
+ */
+const STEPS: { title: string; hint?: string; fields: FieldName[] }[] = [
+  { title: 'Which studio?', hint: 'The studio holding your booking.', fields: ['studio_id'] },
+  { title: 'What class?', fields: ['class_name', 'class_type', 'instructor_name'] },
+  { title: 'When is it?', fields: ['class_date', 'class_time', 'duration_minutes'] },
+  { title: 'Where is it?', hint: 'So buyers know how far it is.', fields: ['address'] },
+  { title: 'What are you asking?', hint: 'Price it below the door rate and it goes fast.', fields: ['price_dollars', 'discount_dollars'] },
+  { title: 'Prove the booking', hint: 'Released to the buyer 2 hours before class.', fields: [] },
+  { title: 'Anything else?', hint: 'Optional — then you are done.', fields: ['description'] },
+]
+
 interface NewListingFormProps {
   profile: Profile
 }
@@ -59,7 +76,10 @@ export function NewListingForm({ profile }: NewListingFormProps) {
   const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null)
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
+  const [step, setStep] = useState(0)
   const router = useRouter()
+
+  const isLastStep = step === STEPS.length - 1
 
   // Today is allowed as long as the class time itself is still ahead.
   // Built from local parts: toISOString() is UTC and would roll over to
@@ -83,6 +103,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
     setValue,
     watch,
     formState: { errors },
+    trigger,
   } = useForm<ListingFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
@@ -128,6 +149,24 @@ export function NewListingForm({ profile }: NewListingFormProps) {
           : enteredCents < recommended.lowCents
             ? 'low'
             : 'good'
+
+  const goNext = async () => {
+    const { fields } = STEPS[step]
+    if (fields.length > 0 && !(await trigger(fields))) return
+
+    // The screenshot lives outside the schema, so gate its step by hand.
+    if (STEPS[step].title === 'Prove the booking' && !screenshotFile) {
+      toast.error('Please upload your booking confirmation screenshot')
+      return
+    }
+
+    setStep((v) => Math.min(v + 1, STEPS.length - 1))
+  }
+
+  const goBack = () => {
+    if (step === 0) { router.back(); return }
+    setStep((v) => v - 1)
+  }
 
   const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -196,16 +235,38 @@ export function NewListingForm({ profile }: NewListingFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, onInvalid as never)} className="space-y-6 max-w-2xl">
+    <form
+      onSubmit={handleSubmit(onSubmit, onInvalid as never)}
+      className="max-w-lg mx-auto min-h-[70vh] flex flex-col"
+    >
+      {/* Progress */}
+      <div className="h-0.5 bg-white/10 rounded-full overflow-hidden mb-10">
+        <div
+          className="h-full bg-white transition-all duration-300"
+          style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+        />
+      </div>
+
+      <div className="mb-8">
+        <p className="text-xs text-white/40 uppercase tracking-widest mb-2">
+          Step {step + 1} of {STEPS.length}
+        </p>
+        <h2 className="text-2xl font-bold text-white">{STEPS[step].title}</h2>
+        {STEPS[step].hint && (
+          <p className="text-sm text-white/50 mt-1.5">{STEPS[step].hint}</p>
+        )}
+      </div>
+
+      <div className="flex-1 space-y-6">
 
       {/* Studio picker */}
-      <div className="space-y-2" id="field-studio_id">
+      <div className={step === 0 ? 'space-y-2' : 'hidden'} id="field-studio_id">
         <Label>Studio *</Label>
         <Select onValueChange={(val) => {
           setValue('studio_id', val)
           setSelectedStudio(studios.find((s) => s.id === val) ?? null)
         }}>
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a studio" />
           </SelectTrigger>
           <SelectContent>
@@ -218,7 +279,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
 
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className={step === 1 ? 'space-y-4' : 'hidden'}>
         <div className="space-y-2">
           <Label htmlFor="class_name">Class name *</Label>
           <Input id="class_name" placeholder="Power Ride 45" {...register('class_name')} />
@@ -231,11 +292,11 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         </div>
       </div>
 
-      <div className="max-w-xs">
+      <div className={step === 1 ? '' : 'hidden'}>
         <div className="space-y-2" id="field-class_type">
           <Label>Class type *</Label>
           <Select onValueChange={(val) => setValue('class_type', val as ClassType)}>
-            <SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue placeholder="Select a type" /></SelectTrigger>
             <SelectContent>
               {CLASS_TYPES.map((t) => (
                 <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -246,7 +307,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className={step === 2 ? 'grid grid-cols-1 sm:grid-cols-3 gap-4' : 'hidden'}>
         <div className="space-y-2">
           <Label htmlFor="class_date">Date *</Label>
           <Input id="class_date" type="date" min={minDateStr} {...register('class_date')} />
@@ -265,13 +326,13 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className={step === 3 ? 'space-y-2' : 'hidden'}>
         <Label htmlFor="address">Address *</Label>
         <Input id="address" placeholder="123 Main St, New York, NY" {...register('address')} />
         {errors.address && <p className="text-sm text-red-500">{errors.address.message}</p>}
       </div>
 
-      <div className="space-y-2 max-w-xs">
+      <div className={step === 4 ? 'space-y-2' : 'hidden'}>
         <Label htmlFor="price_dollars">Listing Price *</Label>
         <Input
           id="price_dollars"
@@ -321,7 +382,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         {errors.price_dollars && <p className="text-sm text-red-500">{errors.price_dollars.message}</p>}
       </div>
 
-      <div className="space-y-2" id="field-discount_dollars">
+      <div className={step === 4 ? 'space-y-2 pt-2' : 'hidden'} id="field-discount_dollars">
         <Label htmlFor="discount_dollars">
           Last-minute price <span className="text-muted-foreground font-normal">(optional)</span>
         </Label>
@@ -343,7 +404,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
       </div>
 
       {/* Screenshot upload */}
-      <div className="space-y-2">
+      <div className={step === 5 ? 'space-y-2' : 'hidden'}>
         <Label htmlFor="screenshot">Booking confirmation screenshot *</Label>
         <p className="text-xs text-muted-foreground">
           Upload a screenshot of your booking confirmation. This is shown to buyers as proof of the booking.
@@ -364,7 +425,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className={step === 6 ? 'space-y-2' : 'hidden'}>
         <Label htmlFor="description">Additional notes (optional)</Label>
         <Textarea
           id="description"
@@ -374,13 +435,28 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         />
       </div>
 
-      <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Posting…' : 'Post listing'}
-        </Button>
-        <Button type="button" variant="ghost" onClick={() => router.back()}>
-          Cancel
-        </Button>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between gap-4 pt-10 mt-auto">
+        <button
+          type="button"
+          onClick={goBack}
+          className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {step === 0 ? 'Cancel' : 'Back'}
+        </button>
+
+        {isLastStep ? (
+          <Button type="submit" disabled={loading} className="rounded-full px-8">
+            {loading ? 'Posting…' : 'Post spot'}
+          </Button>
+        ) : (
+          <Button type="button" onClick={goNext} className="rounded-full px-8">
+            Next
+          </Button>
+        )}
       </div>
     </form>
   )

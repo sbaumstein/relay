@@ -69,7 +69,7 @@ export function SignupForm() {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl">Create an account</CardTitle>
-        <CardDescription>Join Workout Exchange to post and claim class spots</CardDescription>
+        <CardDescription>Post a spot you can't use, or claim one from someone who can't</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

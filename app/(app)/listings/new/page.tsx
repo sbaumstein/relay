@@ -19,12 +19,6 @@ export default async function NewListingPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Post a Class Spot</h1>
-        <p className="text-muted-foreground mt-1">
-          List your workout class so someone else can claim it
-        </p>
-      </div>
       <NewListingForm profile={profile as Profile} />
     </div>
   )

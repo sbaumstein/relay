@@ -12,7 +12,7 @@ export function StarRating({ stars, total, showLabel = false, size = 'sm' }: Sta
 
   if (total < 5) {
     return (
-      <span className="text-xs text-muted-foreground">New seller</span>
+      <span className="text-sm text-white/50">New seller</span>
     )
   }
 
@@ -22,13 +22,13 @@ export function StarRating({ stars, total, showLabel = false, size = 'sm' }: Sta
         {[1, 2, 3, 4, 5].map((i) => (
           <Star
             key={i}
-            className={`${iconSize} ${i <= stars ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`}
+            className={`${iconSize} ${i <= stars ? 'fill-white text-white' : 'fill-white/15 text-white/15'}`}
           />
         ))}
       </div>
       {showLabel && (
-        <span className="text-xs text-muted-foreground ml-1">
-          ({total} transfer{total !== 1 ? 's' : ''})
+        <span className="text-sm text-white/50 ml-1">
+          ({total})
         </span>
       )}
     </div>

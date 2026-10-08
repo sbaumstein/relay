@@ -17,19 +17,19 @@ import { CLASS_TYPES, NEIGHBORHOODS } from '@/types'
 import type { ClassType, Listing } from '@/types'
 
 const schema = z.object({
-  class_name: z.string().min(1, 'Class name is required'),
+  class_name: z.string({ error: 'Class name is required' }).min(1, 'Class name is required'),
   instructor_name: z.string().optional(),
   class_type: z.enum([
     'yoga', 'pilates', 'spinning', 'barre', 'hiit',
     'boxing', 'strength', 'dance', 'meditation', 'other',
-  ] as [ClassType, ...ClassType[]]),
+  ] as [ClassType, ...ClassType[]], { error: 'Pick a class type' }),
   description: z.string().optional(),
-  class_date: z.string().min(1, 'Date is required'),
-  class_time: z.string().min(1, 'Time is required'),
+  class_date: z.string({ error: 'Date is required' }).min(1, 'Date is required'),
+  class_time: z.string({ error: 'Time is required' }).min(1, 'Time is required'),
   duration_minutes: z.coerce.number().optional(),
-  address: z.string().min(1, 'Address is required'),
+  address: z.string({ error: 'Address is required' }).min(1, 'Address is required'),
   neighborhood: z.string().optional(),
-  price_dollars: z.coerce.number().min(1, 'Price is required'),
+  price_dollars: z.coerce.number({ error: 'Price is required' }).min(1, 'Price is required'),
   discount_dollars: z.union([z.coerce.number(), z.literal('')]).optional(),
 }).refine(
   (d) => {
