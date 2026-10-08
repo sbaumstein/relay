@@ -166,13 +166,13 @@ export default async function DashboardPage() {
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-10">
-        <p className="text-xs text-white/60 uppercase tracking-widest mb-1">Profile</p>
+        <p className="text-xs text-brand uppercase tracking-widest mb-1">Profile</p>
         <h1 className="text-3xl font-bold text-white">{p?.full_name ?? user.email}</h1>
       </div>
 
       {/* Rating */}
       <div className="border border-white/20 rounded-xl p-5 mb-10">
-        <p className="text-xs text-white/60 uppercase tracking-widest mb-3">Rating</p>
+        <p className="text-xs text-brand uppercase tracking-widest mb-3">Rating</p>
         <StarRating stars={sellerStats.stars} total={sellerStats.total} size="md" showLabel />
 
         <div className="grid grid-cols-3 divide-x divide-white/15 border-t border-white/15 mt-5 pt-4">
