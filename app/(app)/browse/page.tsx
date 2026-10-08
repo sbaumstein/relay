@@ -119,7 +119,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
     <div className="flex gap-6">
       {/* Listings list */}
       <div className="flex-1 min-w-0">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">
+        <div className="divide-y divide-white/10">
           {listings.map((listing) => {
             const raw = statsMap[listing.seller_id] ?? { total: 0, completed: 0 }
             const stats = getSellerStats(raw.total, raw.completed)
@@ -160,14 +160,16 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
       <Suspense
         fallback={
           <div className="flex gap-6">
-            <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">
+            <div className="flex-1 divide-y divide-white/10">
               {[...Array(6)].map((_, i) => (
-                <div key={i}>
-                  <div className="aspect-[5/2] rounded-xl bg-white/8 animate-pulse" />
-                  <div className="mt-3 space-y-2">
-                    <div className="h-4 w-32 bg-white/8 rounded animate-pulse" />
-                    <div className="h-3 w-40 bg-white/8 rounded animate-pulse" />
+                <div key={i} className="flex items-center gap-6 px-4 py-4">
+                  <div className="w-28 space-y-1.5">
+                    <div className="h-4 w-14 bg-white/8 rounded animate-pulse" />
                     <div className="h-3 w-16 bg-white/8 rounded animate-pulse" />
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-4 w-48 bg-white/8 rounded animate-pulse" />
+                    <div className="h-3 w-64 bg-white/8 rounded animate-pulse" />
                   </div>
                 </div>
               ))}
