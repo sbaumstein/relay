@@ -163,7 +163,7 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
             <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">
               {[...Array(6)].map((_, i) => (
                 <div key={i}>
-                  <div className="aspect-[3/2] rounded-xl bg-white/8 animate-pulse" />
+                  <div className="aspect-[2/1] rounded-xl bg-white/8 animate-pulse" />
                   <div className="mt-3 space-y-2">
                     <div className="h-4 w-32 bg-white/8 rounded animate-pulse" />
                     <div className="h-3 w-40 bg-white/8 rounded animate-pulse" />

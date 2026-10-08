@@ -42,7 +42,7 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
     <Link href={`/listings/${listing.id}`} className="group block">
       {/* Visual — the studio is the subject; the date is supporting detail. */}
       <div
-        className={`relative aspect-[3/2] rounded-xl overflow-hidden bg-gradient-to-br ${tint} border border-white/10`}
+        className={`relative aspect-[2/1] rounded-xl overflow-hidden bg-gradient-to-br ${tint} border border-white/10`}
       >
         <span className="absolute top-2.5 left-3 text-[10px] uppercase tracking-widest text-white/60">
           {classTypeLabel}
@@ -60,7 +60,7 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
             <img
               src={logoUrl}
               alt={listing.studio_name}
-              className="max-h-14 max-w-[75%] object-contain opacity-95"
+              className="max-h-10 max-w-[75%] object-contain opacity-95"
             />
           ) : (
             // No asset yet, so set the name as a wordmark rather than leave a hole.
