@@ -282,22 +282,39 @@ export function NewListingForm({ profile }: NewListingFormProps) {
           {...register('price_dollars')}
         />
         {recommended && (
-          <div className="pt-1">
+          <div className="pt-1 space-y-1.5">
             <p className="text-xs text-white/50 uppercase tracking-widest">Recommended</p>
-            <button
-              type="button"
-              onClick={() => setValue('price_dollars', recommended.suggestedCents / 100, {
-                shouldValidate: true,
-              })}
-              title="Use this price"
-              className="text-3xl font-bold text-white leading-tight hover:opacity-70 transition-opacity"
-            >
-              {formatCents(recommended.suggestedCents)}
-            </button>
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <p className="text-3xl font-bold text-white leading-tight">
+                {formatCents(recommended.lowCents)}–{formatCents(recommended.highCents)}
+              </p>
+              <button
+                type="button"
+                onClick={() => setValue('price_dollars', recommended.suggestedCents / 100, {
+                  shouldValidate: true,
+                })}
+                className="text-xs border border-white/30 text-white/80 px-2.5 py-1 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                Use {formatCents(recommended.suggestedCents)}
+              </button>
+            </div>
             {priceVerdict === 'over_retail' && (
-              <p className="text-xs text-red-500 mt-1.5">
+              <p className="text-xs text-red-500">
                 That&apos;s more than the studio charges — buyers can book direct for less.
               </p>
+            )}
+            {priceVerdict === 'high' && (
+              <p className="text-xs text-amber-500">
+                Above the recommended range. It may sit unclaimed.
+              </p>
+            )}
+            {priceVerdict === 'low' && (
+              <p className="text-xs text-emerald-500">
+                Below the recommended range — should go quickly.
+              </p>
+            )}
+            {priceVerdict === 'good' && (
+              <p className="text-xs text-emerald-500">Priced to claim.</p>
             )}
           </div>
         )}
