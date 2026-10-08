@@ -171,7 +171,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Rating */}
-      <div className="border border-white/20 rounded-2xl p-5 mb-10">
+      <div className="border border-white/20 rounded-xl p-5 mb-10">
         <p className="text-xs text-white/60 uppercase tracking-widest mb-3">Rating</p>
         <StarRating stars={sellerStats.stars} total={sellerStats.total} size="md" showLabel />
 
@@ -245,7 +245,7 @@ export default async function DashboardPage() {
         }
       >
         {!myListings || myListings.length === 0 ? (
-          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No listings yet</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20 rounded-xl">No listings yet</p>
         ) : (
           <div className="border-t border-white/20">
             {myListings.map((listing) => {
@@ -306,7 +306,7 @@ export default async function DashboardPage() {
         }
       >
         {!myClaims || myClaims.length === 0 ? (
-          <p className="text-white/60 text-sm py-8 text-center border border-white/20">No claims yet</p>
+          <p className="text-white/60 text-sm py-8 text-center border border-white/20 rounded-xl">No claims yet</p>
         ) : (
           <div className="border-t border-white/20">
             {myClaims.map((claim) => {

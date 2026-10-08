@@ -34,7 +34,7 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
     : '—'
 
   return (
-    <div className="border border-orange-400/30 p-5 space-y-4">
+    <div className="border border-orange-400/30 rounded-xl p-5 space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs text-orange-400 uppercase tracking-widest mb-1">Dispute</p>

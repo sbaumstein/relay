@@ -127,7 +127,7 @@ export function AdminUserTable({ users }: { users: AdminUserRow[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-white/40 text-sm py-8 text-center border border-white/20">
+        <p className="text-white/40 text-sm py-8 text-center border border-white/20 rounded-xl">
           No users match
         </p>
       ) : (

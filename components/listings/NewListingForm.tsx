@@ -449,11 +449,11 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         </button>
 
         {isLastStep ? (
-          <Button type="submit" disabled={loading} className="rounded-full px-8">
+          <Button type="submit" disabled={loading} className="rounded-xl px-8">
             {loading ? 'Posting…' : 'Post spot'}
           </Button>
         ) : (
-          <Button type="button" onClick={goNext} className="rounded-full px-8">
+          <Button type="button" onClick={goNext} className="rounded-xl px-8">
             Next
           </Button>
         )}

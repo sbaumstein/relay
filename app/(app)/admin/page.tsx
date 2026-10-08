@@ -90,17 +90,17 @@ export default async function AdminPage() {
       <section>
         <p className="text-xs text-white/50 uppercase tracking-widest mb-4">Escrow</p>
         <div className="grid grid-cols-3 gap-4">
-          <div className="border border-white/20 p-5">
+          <div className="border border-white/20 rounded-xl p-5">
             <p className="text-xs text-white/50 mb-1">Total in escrow</p>
             <p className="text-2xl font-bold text-white">{formatCents(totalEscrow)}</p>
             <p className="text-xs text-white/40 mt-1">{escrowClaims.length} active claim{escrowClaims.length !== 1 ? 's' : ''}</p>
           </div>
-          <div className="border border-white/20 p-5">
+          <div className="border border-white/20 rounded-xl p-5">
             <p className="text-xs text-white/50 mb-1">Pending seller transfers</p>
             <p className="text-2xl font-bold text-emerald-400">{formatCents(pendingTransfer)}</p>
             <p className="text-xs text-white/40 mt-1">releases after confirmation</p>
           </div>
-          <div className="border border-white/20 p-5">
+          <div className="border border-white/20 rounded-xl p-5">
             <p className="text-xs text-white/50 mb-1">In dispute</p>
             <p className="text-2xl font-bold text-orange-400">
               {formatCents(escrowClaims.filter(c => c.status === 'disputed').reduce((s, c) => s + c.amount_cents, 0))}

@@ -21,7 +21,7 @@ export default function HomePage() {
           </Link>
           <Link
             href="/signup"
-            className="border border-white/50 hover:border-white px-5 py-2 text-sm transition-colors"
+            className="border border-white/50 hover:border-white rounded-xl px-5 py-2 text-sm transition-colors"
           >
             Get started
           </Link>

@@ -54,7 +54,7 @@ export function DisputeResponseCard({
   }
 
   return (
-    <div className="border border-orange-400/40 p-4 mt-2 space-y-3">
+    <div className="border border-orange-400/40 rounded-xl p-4 mt-2 space-y-3">
       <div className="flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 text-orange-400 flex-shrink-0 mt-0.5" />
         <div>
@@ -110,7 +110,7 @@ export function DisputeResponseCard({
             placeholder="Explain what happened from your side…"
             rows={4}
             disabled={loading}
-            className="w-full bg-white/5 border border-white/20 p-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/50"
+            className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/50"
           />
           <EvidenceUpload
             value={evidenceUrls}
