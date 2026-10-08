@@ -41,12 +41,11 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
       .eq('status', 'available')
       .gte('class_datetime', new Date().toISOString())
 
-  switch (params.sort) {
-    case 'newest':     q = q.order('created_at', { ascending: false }); break
-    case 'latest':     q = q.order('class_datetime', { ascending: false }); break
-    case 'price_low':  q = q.order('price_cents', { ascending: true }); break
-    case 'price_high': q = q.order('price_cents', { ascending: false }); break
-    default:           q = q.order('class_datetime', { ascending: true })
+  // Two orders only: soonest class first, or cheapest first.
+    if (params.sort === 'price_low') {
+      q = q.order('price_cents', { ascending: true })
+    } else {
+      q = q.order('class_datetime', { ascending: true })
     }
 
     q = q.limit(50)

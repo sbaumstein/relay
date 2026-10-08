@@ -6,29 +6,34 @@ import { Search, X, ChevronDown } from 'lucide-react'
 import { CLASS_TYPES } from '@/types'
 
 export const SORT_OPTIONS = [
-  { value: 'soonest', label: 'Starting soonest' },
-  { value: 'newest', label: 'Just added' },
-  { value: 'latest', label: 'Furthest ahead' },
-  { value: 'price_low', label: 'Cheapest first' },
-  { value: 'price_high', label: 'Priciest first' },
+  { value: 'soonest', label: 'Time' },
+  { value: 'price_low', label: 'Price' },
 ] as const
 
 /** Native select keeps the good mobile picker; the chevron is drawn on top. */
 function Dropdown({
-  value, onChange, label, children, className = '',
+  value, onChange, label, prefix, children, className = '',
 }: {
   value: string
   onChange: (v: string) => void
   label: string
+  /** Standing text inside the control, e.g. "Sort:". */
+  prefix?: string
   children: React.ReactNode
   className?: string
 }) {
   return (
     <div className={`relative ${className}`}>
+      {prefix && (
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40 pointer-events-none">
+          {prefix}
+        </span>
+      )}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
+        style={prefix ? { paddingLeft: '3.1rem' } : undefined}
         className="w-full bg-white/5 border border-white/20 rounded-lg text-sm text-white pl-3 pr-9 py-2.5
                    cursor-pointer appearance-none transition-colors
                    hover:border-white/40 focus:outline-none focus:border-white/50
@@ -115,7 +120,8 @@ export function ListingFilters() {
           value={sort}
           onChange={(v) => setParam('sort', v)}
           label="Sort by"
-          className="flex-1 sm:w-44 sm:flex-none"
+          prefix="Sort:"
+          className="flex-1 sm:w-40 sm:flex-none"
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
