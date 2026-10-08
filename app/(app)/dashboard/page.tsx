@@ -11,6 +11,7 @@ import { expireStaleListings } from '@/lib/expireListings'
 import { monthShort, dayOfMonth } from '@/lib/datetime'
 import { releaseMaturedClaims, DEFAULT_HOLD_HOURS } from '@/lib/autoRelease'
 import { getDisputeWindow } from '@/lib/disputeWindow'
+import { HistorySection } from '@/components/dashboard/HistorySection'
 
 function StatusPill({ status }: { status: string }) {
   // The stored names are historical: pending_confirmation dates from when a
@@ -39,6 +40,35 @@ function StatusPill({ status }: { status: string }) {
   )
 }
 
+/** Settled listings and claims only need to be legible, not actionable. */
+function PastRow({
+  classDatetime, title, subtitle, status, amountCents,
+}: {
+  classDatetime: string
+  title: string
+  subtitle: string
+  status: string
+  amountCents: number
+}) {
+  const d = new Date(classDatetime)
+  return (
+    <div className="flex items-center gap-4 py-3 px-1 border-b border-white/10">
+      <div className="w-16 flex-shrink-0 text-center">
+        <p className="text-base font-semibold text-white/80 leading-none">{dayOfMonth(d)}</p>
+        <p className="text-xs text-white/50">{monthShort(d)}</p>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-white/80 text-sm truncate">{title}</p>
+        <p className="text-xs text-white/50 truncate">{subtitle}</p>
+      </div>
+      <div className="flex-shrink-0 flex items-center gap-3">
+        <StatusPill status={status} />
+        <p className="text-white/70 text-sm">{formatCents(amountCents)}</p>
+      </div>
+    </div>
+  )
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -54,7 +84,15 @@ export default async function DashboardPage() {
   // drops off the profile at the same point.
   const holdCutoff = new Date(Date.now() - DEFAULT_HOLD_HOURS * 60 * 60 * 1000).toISOString()
 
-  const [{ data: profile }, { data: myListings }, { data: myClaims }, { data: sellerClaims }, { data: disputesAgainstMe }] = await Promise.all([
+  const [
+    { data: profile },
+    { data: myListings },
+    { data: myClaims },
+    { data: sellerClaims },
+    { data: disputesAgainstMe },
+    { data: pastListings },
+    { data: pastClaims },
+  ] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase.from('listings')
       .select('*')
@@ -73,6 +111,19 @@ export default async function DashboardPage() {
       .eq('seller_id', user.id)
       .eq('status', 'disputed')
       .order('disputed_at', { ascending: true }),
+    // Settled history, shown collapsed under each section.
+    supabase.from('listings')
+      .select('*')
+      .eq('seller_id', user.id)
+      .or(`status.in.(expired,cancelled),class_datetime.lte.${holdCutoff}`)
+      .order('class_datetime', { ascending: false })
+      .limit(50),
+    supabase.from('claims')
+      .select('*, listing:listings(*)')
+      .eq('claimer_id', user.id)
+      .in('status', ['completed', 'auto_released', 'refunded', 'dispute_won', 'dispute_lost'])
+      .order('created_at', { ascending: false })
+      .limit(50),
   ])
 
   // Map each of the seller's listings to its live claim, so they can report a
@@ -137,11 +188,28 @@ export default async function DashboardPage() {
       )}
 
       {/* My Listings */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/60 uppercase tracking-widest">My listings ({myListings?.length ?? 0})</p>
-          <Link href="/listings/new" className="text-xs text-white/70 hover:text-white transition-colors">+ New</Link>
-        </div>
+      <HistorySection
+        title={`My listings (${myListings?.length ?? 0})`}
+        historyLabel="Previous listings"
+        historyCount={pastListings?.length ?? 0}
+        history={
+          <div className="border-t border-white/10">
+            {(pastListings ?? []).map((listing) => {
+              const l = listing as Listing
+              return (
+                <PastRow
+                  key={l.id}
+                  classDatetime={l.class_datetime}
+                  title={l.class_name}
+                  subtitle={l.studio_name}
+                  status={l.status}
+                  amountCents={l.price_cents}
+                />
+              )
+            })}
+          </div>
+        }
+      >
         {!myListings || myListings.length === 0 ? (
           <p className="text-white/60 text-sm py-8 text-center border border-white/20">No listings yet</p>
         ) : (
@@ -180,13 +248,29 @@ export default async function DashboardPage() {
             })}
           </div>
         )}
-      </div>
+      </HistorySection>
 
       {/* My Claims */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-xs text-white/60 uppercase tracking-widest">My claims ({myClaims?.length ?? 0})</p>
-        </div>
+      <HistorySection
+        title={`My claims (${myClaims?.length ?? 0})`}
+        historyLabel="Previous claims"
+        historyCount={pastClaims?.length ?? 0}
+        history={
+          <div className="border-t border-white/10">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {(pastClaims ?? []).map((c: any) => (
+              <PastRow
+                key={c.id}
+                classDatetime={c.listing?.class_datetime ?? c.created_at}
+                title={c.listing?.class_name ?? 'Class'}
+                subtitle={c.listing?.studio_name ?? ''}
+                status={c.status}
+                amountCents={c.amount_cents}
+              />
+            ))}
+          </div>
+        }
+      >
         {!myClaims || myClaims.length === 0 ? (
           <p className="text-white/60 text-sm py-8 text-center border border-white/20">No claims yet</p>
         ) : (
@@ -230,7 +314,7 @@ export default async function DashboardPage() {
             })}
           </div>
         )}
-      </div>
+      </HistorySection>
 
       {/* FAB */}
       <Link
