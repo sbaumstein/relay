@@ -12,11 +12,11 @@
      surface. Swap these two values to retune the whole app. */
   --color-brand: #b7aec9;
   --color-brand-soft: #d6d0e2;
-  /* The page behind everything — a desaturated blue-grey, lightened, and set
-     slightly translucent. The body behind is near-black, so the alpha reads
+  /* The page behind everything — a blue-grey with the blue brought back up,
+     at the same 88% translucency. The body behind is near-black, so the alpha reads
      as a small darkening; the base is raised to compensate and land on the
      intended tone. */
-  --color-surface: #282B33E0;
+  --color-surface: #2B303EC4;
 }
 
 @theme inline {
