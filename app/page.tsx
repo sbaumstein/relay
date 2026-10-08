@@ -34,19 +34,19 @@ export default function HomePage() {
           Can&apos;t make it<br />to class?
         </h1>
         <p className="text-lg sm:text-xl text-white/60 mb-12 max-w-md">
-          Pass your spot to someone who can.
+          Relay your spot to someone who can.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <Link
             href="/browse"
-            className="w-48 text-center bg-white text-neutral-900 font-semibold py-3 px-8 hover:bg-emerald-400 transition-colors text-sm uppercase tracking-widest"
+            className="w-48 text-center bg-white text-neutral-900 font-semibold rounded-xl py-3 px-8 hover:bg-emerald-400 transition-colors text-sm uppercase tracking-widest"
           >
             Browse Spots
           </Link>
           <Link
             href="/signup"
-            className="w-48 text-center border border-white/50 hover:border-white font-semibold py-3 px-8 transition-colors text-sm uppercase tracking-widest"
+            className="w-48 text-center border border-white/50 hover:border-white font-semibold rounded-xl py-3 px-8 transition-colors text-sm uppercase tracking-widest"
           >
             Post a Spot
           </Link>

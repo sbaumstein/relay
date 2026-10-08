@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Relay — Pass Your Spot',
     short_name: 'Relay',
-    description: "Can't make it to class? Pass your spot to someone who can.",
+    description: "Can't make it to class? Relay your spot to someone who can.",
     start_url: '/browse',
     display: 'standalone',
     background_color: '#000000',

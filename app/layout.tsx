@@ -12,7 +12,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: 'Relay — Pass Your Spot',
-  description: 'Can\'t make it to class? Pass your spot to someone who can.',
+  description: 'Can\'t make it to class? Relay your spot to someone who can.',
   // Tells iOS to launch an installed Relay without Safari's chrome.
   appleWebApp: {
     capable: true,
@@ -37,8 +37,8 @@ export default function RootLayout({
   return (
     /* suppressHydrationWarning: browser extensions (Bitdefender, Grammarly, …)
        inject attributes onto html/body before React hydrates. */
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${outfit.variable} font-sans antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`dark ${outfit.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
         <Toaster />
       </body>
