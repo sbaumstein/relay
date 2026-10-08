@@ -12,10 +12,10 @@
      surface. Swap these two values to retune the whole app. */
   --color-brand: #b7aec9;
   --color-brand-soft: #d6d0e2;
-  /* The page behind everything — soft smoke. Opaque rather than the earlier
-     translucent white, so the surface doesn't shift with whatever sits
-     behind it. */
-  --color-surface: #121212;
+  /* The page behind everything — ink navy. A cool blue tint at roughly the
+     brightness of a neutral dark grey, so it reads as colour without
+     announcing itself. */
+  --color-surface: #111722;
 }
 
 @theme inline {
