@@ -29,6 +29,12 @@ export async function POST(request: NextRequest) {
 
   if (listingError || !listing) return NextResponse.json({ error: 'Listing not found' }, { status: 404 })
   if (listing.status !== 'available') return NextResponse.json({ error: 'This listing is no longer available' }, { status: 409 })
+
+  // Status alone isn't enough: a listing only becomes 'expired' when someone
+  // loads a page that sweeps it, so check the clock directly.
+  if (new Date(listing.class_datetime) <= new Date()) {
+    return NextResponse.json({ error: 'This class has already started' }, { status: 409 })
+  }
   if (listing.seller_id === user.id) return NextResponse.json({ error: 'You cannot claim your own listing' }, { status: 400 })
 
   if (await isBanned(listing.seller_id)) {

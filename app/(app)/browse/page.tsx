@@ -9,7 +9,6 @@ import { ListingFilters } from '@/components/listings/ListingFilters'
 import { MapView } from '@/components/listings/MapView'
 import { getSellerStats } from '@/types'
 import type { ClassType, Listing } from '@/types'
-import { expireStaleListings } from '@/lib/expireListings'
 import { getEffectivePrice } from '@/lib/pricing'
 
 interface BrowsePageProps {
@@ -24,8 +23,6 @@ interface BrowsePageProps {
 async function BrowseContent({ searchParams }: BrowsePageProps) {
   const params = await searchParams
   const supabase = await createClient()
-
-  await expireStaleListings(supabase)
 
   // studios.logo_url is additive and may not be applied yet; the listing query
   // falls back to the narrower select so browse keeps working until it is.
@@ -140,7 +137,13 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
   )
 }
 
-export default function BrowsePage({ searchParams }: BrowsePageProps) {
+export default async function BrowsePage({ searchParams }: BrowsePageProps) {
+  // Keying the boundary on the active filters makes a filter change a remount
+  // rather than an update, so the skeleton shows immediately instead of the
+  // page sitting on stale results until the server answers.
+  const p = await searchParams
+  const filterKey = [p.class_type, p.neighborhood, p.q, p.sort].join('|')
+
   return (
     <div>
       <div className="mb-6">
@@ -157,6 +160,7 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
       </div>
 
       <Suspense
+        key={filterKey}
         fallback={
           <div className="flex gap-6">
             <div className="flex-1 divide-y divide-white/10">
