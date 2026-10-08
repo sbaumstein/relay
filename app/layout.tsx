@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist } from 'next/font/google'
+import { Outfit } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 
-const geist = Geist({
-  variable: '--font-geist',
+// Variable font, so 550 is a real weight rather than a synthesised one.
+const outfit = Outfit({
+  variable: '--font-outfit',
   subsets: ['latin'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -36,7 +38,7 @@ export default function RootLayout({
     /* suppressHydrationWarning: browser extensions (Bitdefender, Grammarly, …)
        inject attributes onto html/body before React hydrates. */
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${geist.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body className={`${outfit.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
         <Toaster />
       </body>

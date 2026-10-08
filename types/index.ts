@@ -4,6 +4,8 @@ export type PaymentType = 'prepaid' | 'pay_in_person'
 export interface Studio {
   id: string
   name: string
+  /** Shown on browse cards; falls back to a wordmark when unset. */
+  logo_url?: string | null
   cancellation_policy: CancellationPolicy
   cancellation_fee_cents: number | null
   payment_type: PaymentType

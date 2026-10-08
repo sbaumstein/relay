@@ -27,36 +27,50 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
 
   await expireStaleListings(supabase)
 
-  let query = supabase
-    .from('listings')
-    .select('*, seller:profiles!seller_id(id, full_name, email, is_banned)')
-    .eq('status', 'available')
-    .gte('class_datetime', new Date().toISOString())
+  // studios.logo_url is additive and may not be applied yet; the listing query
+  // falls back to the narrower select so browse keeps working until it is.
+  const SELECT_WITH_LOGO =
+    '*, seller:profiles!seller_id(id, full_name, email, is_banned), studio:studios(id, name, logo_url)'
+  const SELECT_WITHOUT_LOGO =
+    '*, seller:profiles!seller_id(id, full_name, email, is_banned), studio:studios(id, name)'
+
+  const buildQuery = (select: string) => {
+    let q = supabase
+      .from('listings')
+      .select(select)
+      .eq('status', 'available')
+      .gte('class_datetime', new Date().toISOString())
 
   switch (params.sort) {
-    case 'newest':     query = query.order('created_at', { ascending: false }); break
-    case 'latest':     query = query.order('class_datetime', { ascending: false }); break
-    case 'price_low':  query = query.order('price_cents', { ascending: true }); break
-    case 'price_high': query = query.order('price_cents', { ascending: false }); break
-    default:           query = query.order('class_datetime', { ascending: true })
+    case 'newest':     q = q.order('created_at', { ascending: false }); break
+    case 'latest':     q = q.order('class_datetime', { ascending: false }); break
+    case 'price_low':  q = q.order('price_cents', { ascending: true }); break
+    case 'price_high': q = q.order('price_cents', { ascending: false }); break
+    default:           q = q.order('class_datetime', { ascending: true })
+    }
+
+    q = q.limit(50)
+
+    if (params.class_type) q = q.eq('class_type', params.class_type as ClassType)
+    if (params.neighborhood) q = q.eq('neighborhood', params.neighborhood)
+
+    // Commas and parens are delimiters in PostgREST's or() syntax, so strip them
+    // rather than let a stray character break the whole filter.
+    const term = (params.q ?? '').trim().replace(/[,()*]/g, '')
+    if (term) {
+      q = q.or(
+        `class_name.ilike.%${term}%,studio_name.ilike.%${term}%,` +
+        `neighborhood.ilike.%${term}%,instructor_name.ilike.%${term}%`
+      )
+    }
+
+    return q
   }
 
-  query = query.limit(50)
-
-  if (params.class_type) query = query.eq('class_type', params.class_type as ClassType)
-  if (params.neighborhood) query = query.eq('neighborhood', params.neighborhood)
-
-  // Commas and parens are delimiters in PostgREST's or() syntax, so strip them
-  // rather than let a stray character break the whole filter.
-  const term = (params.q ?? '').trim().replace(/[,()*]/g, '')
-  if (term) {
-    query = query.or(
-      `class_name.ilike.%${term}%,studio_name.ilike.%${term}%,` +
-      `neighborhood.ilike.%${term}%,instructor_name.ilike.%${term}%`
-    )
-  }
-
-  const { data: rawListings } = await query
+  // A runtime select string gives up PostgREST's inferred row type.
+  let result = await buildQuery(SELECT_WITH_LOGO)
+  if (result.error) result = await buildQuery(SELECT_WITHOUT_LOGO)
+  const rawListings = (result.data ?? []) as unknown as Listing[]
 
   // Banned sellers' spots must not be claimable, so keep them out of browse.
   const listings = (rawListings ?? []).filter(
@@ -105,7 +119,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
     <div className="flex gap-6">
       {/* Listings list */}
       <div className="flex-1 min-w-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-5 gap-y-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">
           {listings.map((listing) => {
             const raw = statsMap[listing.seller_id] ?? { total: 0, completed: 0 }
             const stats = getSellerStats(raw.total, raw.completed)
@@ -146,10 +160,10 @@ export default function BrowsePage({ searchParams }: BrowsePageProps) {
       <Suspense
         fallback={
           <div className="flex gap-6">
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-5 gap-y-8">
+            <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">
               {[...Array(6)].map((_, i) => (
                 <div key={i}>
-                  <div className="aspect-[4/3] rounded-xl bg-white/8 animate-pulse" />
+                  <div className="aspect-[3/2] rounded-xl bg-white/8 animate-pulse" />
                   <div className="mt-3 space-y-2">
                     <div className="h-4 w-32 bg-white/8 rounded animate-pulse" />
                     <div className="h-3 w-40 bg-white/8 rounded animate-pulse" />

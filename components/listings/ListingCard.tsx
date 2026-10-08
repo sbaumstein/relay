@@ -36,43 +36,51 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
   const stats = sellerStats ?? getSellerStats(0, 0)
   const price = getEffectivePrice(listing)
   const tint = CLASS_TYPE_TINT[listing.class_type] ?? CLASS_TYPE_TINT.other
+  const logoUrl = listing.studio?.logo_url ?? null
 
   return (
     <Link href={`/listings/${listing.id}`} className="group block">
-      {/* Visual */}
+      {/* Visual — the studio is the subject; the date is supporting detail. */}
       <div
-        className={`relative aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br ${tint} border border-white/10`}
+        className={`relative aspect-[3/2] rounded-xl overflow-hidden bg-gradient-to-br ${tint} border border-white/10`}
       >
-        <span className="absolute top-3 left-3 text-[10px] uppercase tracking-widest text-white/70">
+        <span className="absolute top-2.5 left-3 text-[10px] uppercase tracking-widest text-white/60">
           {classTypeLabel}
         </span>
 
         {price.discounted && (
-          <span className="absolute top-3 right-3 text-[10px] uppercase tracking-widest text-emerald-300 border border-emerald-400/40 rounded-full px-2 py-0.5">
+          <span className="absolute top-2.5 right-2.5 text-[10px] uppercase tracking-widest text-emerald-300 border border-emerald-400/40 rounded-full px-2 py-0.5">
             Last minute
           </span>
         )}
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <p className="text-5xl font-bold text-white leading-none">{dayOfMonth(classDate)}</p>
-          <p className="text-xs uppercase tracking-widest text-white/60 mt-1.5">
-            {monthShort(classDate)}
-          </p>
+        <div className="absolute inset-0 flex items-center justify-center px-5">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt={listing.studio_name}
+              className="max-h-14 max-w-[75%] object-contain opacity-95"
+            />
+          ) : (
+            // No asset yet, so set the name as a wordmark rather than leave a hole.
+            <p className="text-center text-lg font-bold uppercase tracking-widest text-white/90 leading-tight">
+              {listing.studio_name}
+            </p>
+          )}
         </div>
 
-        <span className="absolute bottom-3 left-3 text-xs text-white/70">
-          {weekdayShort(classDate)} · {timeLabel(classDate)}
+        <span className="absolute bottom-2.5 left-3 text-[11px] text-white/70">
+          {weekdayShort(classDate)} {dayOfMonth(classDate)} {monthShort(classDate)} · {timeLabel(classDate)}
         </span>
       </div>
 
-      {/* Detail */}
-      <div className="mt-3">
+      {/* Detail — the tile already carries the studio, so lead with the class. */}
+      <div className="mt-2.5">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-white font-semibold truncate group-hover:underline">
-            {listing.studio_name}
+          <p className="text-white font-semibold text-sm truncate group-hover:underline">
+            {listing.class_name}
           </p>
-          {/* No rating yet is better said with silence than with a label on
-              every card. */}
           {stats.total >= 5 && (
             <div className="flex-shrink-0 pt-0.5">
               <StarRating stars={stats.stars} total={stats.total} />
@@ -80,10 +88,8 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
           )}
         </div>
 
-        <p className="text-sm text-white/60 truncate">{listing.class_name}</p>
-
         {listing.neighborhood && (
-          <p className="text-sm text-white/40 truncate">{listing.neighborhood}</p>
+          <p className="text-sm text-white/50 truncate">{listing.neighborhood}</p>
         )}
 
         <p className="mt-1.5 text-sm">
