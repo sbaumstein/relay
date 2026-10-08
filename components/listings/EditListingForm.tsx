@@ -13,8 +13,8 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { CLASS_TYPES, SKILL_LEVELS, NEIGHBORHOODS } from '@/types'
-import type { ClassType, SkillLevel, Listing } from '@/types'
+import { CLASS_TYPES, NEIGHBORHOODS } from '@/types'
+import type { ClassType, Listing } from '@/types'
 
 const schema = z.object({
   class_name: z.string().min(1, 'Class name is required'),
@@ -23,9 +23,6 @@ const schema = z.object({
     'yoga', 'pilates', 'spinning', 'barre', 'hiit',
     'boxing', 'strength', 'dance', 'meditation', 'other',
   ] as [ClassType, ...ClassType[]]),
-  skill_level: z.enum([
-    'beginner', 'intermediate', 'advanced', 'all_levels',
-  ] as [SkillLevel, ...SkillLevel[]]),
   description: z.string().optional(),
   class_date: z.string().min(1, 'Date is required'),
   class_time: z.string().min(1, 'Time is required'),
@@ -58,7 +55,6 @@ export function EditListingForm({ listing }: { listing: Listing }) {
       class_name: listing.class_name,
       instructor_name: listing.instructor_name ?? '',
       class_type: listing.class_type,
-      skill_level: listing.skill_level,
       description: listing.description ?? '',
       class_date: listing.class_date,
       // <input type="time"> expects HH:MM
@@ -135,7 +131,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         <Input id="instructor_name" {...register('instructor_name')} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="max-w-xs">
         <div className="space-y-2" id="field-class_type">
           <Label>Class type *</Label>
           <Select
@@ -151,20 +147,6 @@ export function EditListingForm({ listing }: { listing: Listing }) {
           </Select>
         </div>
 
-        <div className="space-y-2" id="field-skill_level">
-          <Label>Skill level *</Label>
-          <Select
-            defaultValue={listing.skill_level}
-            onValueChange={(v) => setValue('skill_level', v as SkillLevel)}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {SKILL_LEVELS.map((s) => (
-                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

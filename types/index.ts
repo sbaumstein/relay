@@ -71,7 +71,6 @@ export type ClassType =
   | 'meditation'
   | 'other'
 
-export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels'
 
 export type ListingStatus = 'available' | 'claimed' | 'expired' | 'cancelled'
 export type ClaimStatus =
@@ -112,7 +111,6 @@ export interface Listing {
   class_name: string
   instructor_name: string | null
   class_type: ClassType
-  skill_level: SkillLevel
   description: string | null
   class_date: string
   class_time: string
@@ -159,7 +157,6 @@ export interface NewListingFormData {
   class_name: string
   instructor_name?: string
   class_type: ClassType
-  skill_level: SkillLevel
   description?: string
   class_date: string
   class_time: string
@@ -217,10 +214,4 @@ export const NEIGHBORHOODS = [
   'Other',
 ]
 
-export const SKILL_LEVELS: { value: SkillLevel; label: string }[] = [
-  { value: 'all_levels', label: 'All Levels' },
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' },
-]
 

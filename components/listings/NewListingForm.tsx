@@ -17,9 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent } from '@/components/ui/card'
-import { CLASS_TYPES, SKILL_LEVELS } from '@/types'
-import type { ClassType, SkillLevel, Profile, Studio } from '@/types'
+import { CLASS_TYPES } from '@/types'
+import type { ClassType, Profile, Studio } from '@/types'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getRecommendedPrice } from '@/lib/pricing'
 import { createClient } from '@/lib/supabase/client'
@@ -32,9 +31,6 @@ const schema = z.object({
     'yoga', 'pilates', 'spinning', 'barre', 'hiit',
     'boxing', 'strength', 'dance', 'meditation', 'other',
   ] as [ClassType, ...ClassType[]]),
-  skill_level: z.enum([
-    'beginner', 'intermediate', 'advanced', 'all_levels',
-  ] as [SkillLevel, ...SkillLevel[]]),
   description: z.string().optional(),
   class_date: z.string().min(1, 'Date is required'),
   class_time: z.string().min(1, 'Time is required'),
@@ -220,37 +216,6 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         </Select>
         {errors.studio_id && <p className="text-sm text-red-500">{errors.studio_id.message}</p>}
 
-        {selectedStudio && (
-          <Card className="border-blue-100 bg-blue-50">
-            <CardContent className="py-3 text-sm text-blue-800 space-y-1">
-              {selectedStudio.price_min_cents != null && selectedStudio.price_max_cents != null && (
-                <p>
-                  <strong>Typical price:</strong>{' '}
-                  {formatCents(selectedStudio.price_min_cents)}–{formatCents(selectedStudio.price_max_cents)} per class
-                </p>
-              )}
-              {selectedStudio.cancellation_cutoff_label && (
-                <p>
-                  <strong>Free cancellation until:</strong> {selectedStudio.cancellation_cutoff_label}
-                </p>
-              )}
-              <p>
-                <strong>Payment:</strong>{' '}
-                {selectedStudio.payment_type === 'prepaid' ? 'Prepaid' : 'Pay in person'}
-              </p>
-              {selectedStudio.cancellation_notes && (
-                <p className="text-xs text-blue-700">{selectedStudio.cancellation_notes}</p>
-              )}
-              <p className="text-xs text-blue-600 mt-1">
-                If the buyer no-shows, they forfeit{' '}
-                {selectedStudio.cancellation_policy === 'fixed_fee'
-                  ? `${formatCents(selectedStudio.cancellation_fee_cents ?? 0)}`
-                  : 'the full class amount'}{' '}
-                to you from escrow.
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -266,7 +231,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="max-w-xs">
         <div className="space-y-2" id="field-class_type">
           <Label>Class type *</Label>
           <Select onValueChange={(val) => setValue('class_type', val as ClassType)}>
@@ -278,19 +243,6 @@ export function NewListingForm({ profile }: NewListingFormProps) {
             </SelectContent>
           </Select>
           {errors.class_type && <p className="text-sm text-red-500">{errors.class_type.message}</p>}
-        </div>
-
-        <div className="space-y-2" id="field-skill_level">
-          <Label>Skill level *</Label>
-          <Select onValueChange={(val) => setValue('skill_level', val as SkillLevel)}>
-            <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
-            <SelectContent>
-              {SKILL_LEVELS.map((s) => (
-                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.skill_level && <p className="text-sm text-red-500">{errors.skill_level.message}</p>}
         </div>
       </div>
 
@@ -320,7 +272,7 @@ export function NewListingForm({ profile }: NewListingFormProps) {
       </div>
 
       <div className="space-y-2 max-w-xs">
-        <Label htmlFor="price_dollars">What did you pay for this class? ($) *</Label>
+        <Label htmlFor="price_dollars">Listing Price *</Label>
         <Input
           id="price_dollars"
           type="number"
@@ -329,48 +281,23 @@ export function NewListingForm({ profile }: NewListingFormProps) {
           placeholder="30.00"
           {...register('price_dollars')}
         />
-        <p className="text-xs text-muted-foreground">
-          This is the full amount the buyer pays into escrow.
-        </p>
-
         {recommended && (
-          <div className="border border-emerald-200 bg-emerald-50 p-3 space-y-2 text-sm">
-            <div className="flex items-baseline justify-between gap-3 flex-wrap">
-              <p className="text-emerald-900">
-                <strong>Recommended: {formatCents(recommended.lowCents)}–{formatCents(recommended.highCents)}</strong>
-              </p>
-              <button
-                type="button"
-                onClick={() => setValue('price_dollars', recommended.suggestedCents / 100, {
-                  shouldValidate: true,
-                })}
-                className="text-xs border border-emerald-400 text-emerald-800 px-2.5 py-1 hover:bg-emerald-100 transition-colors"
-              >
-                Use {formatCents(recommended.suggestedCents)}
-              </button>
-            </div>
-            <p className="text-xs text-emerald-700">
-              {selectedStudio?.name} charges{' '}
-              {formatCents(recommended.retailMinCents)}–{formatCents(recommended.retailMaxCents)} at the door.
-              Pricing below that is what makes a resold spot worth claiming.
-            </p>
+          <div className="pt-1">
+            <p className="text-xs text-white/50 uppercase tracking-widest">Recommended</p>
+            <button
+              type="button"
+              onClick={() => setValue('price_dollars', recommended.suggestedCents / 100, {
+                shouldValidate: true,
+              })}
+              title="Use this price"
+              className="text-3xl font-bold text-white leading-tight hover:opacity-70 transition-opacity"
+            >
+              {formatCents(recommended.suggestedCents)}
+            </button>
             {priceVerdict === 'over_retail' && (
-              <p className="text-xs text-red-600">
+              <p className="text-xs text-red-500 mt-1.5">
                 That&apos;s more than the studio charges — buyers can book direct for less.
               </p>
-            )}
-            {priceVerdict === 'high' && (
-              <p className="text-xs text-amber-700">
-                Above the recommended range. It may sit unclaimed.
-              </p>
-            )}
-            {priceVerdict === 'low' && (
-              <p className="text-xs text-emerald-700">
-                Below the recommended range — should go quickly.
-              </p>
-            )}
-            {priceVerdict === 'good' && (
-              <p className="text-xs text-emerald-700">Priced to claim.</p>
             )}
           </div>
         )}

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CLASS_TYPES, SKILL_LEVELS, getSellerStats } from '@/types'
+import { CLASS_TYPES, getSellerStats } from '@/types'
 import type { Listing, SellerStats } from '@/types'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getEffectivePrice } from '@/lib/pricing'
@@ -15,7 +15,6 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
   const classDate = new Date(listing.class_datetime)
   const time = timeLabel(classDate)
   const classTypeLabel = CLASS_TYPES.find((t) => t.value === listing.class_type)?.label ?? listing.class_type
-  const skillLabel = SKILL_LEVELS.find((s) => s.value === listing.skill_level)?.label ?? listing.skill_level
   const stats = sellerStats ?? getSellerStats(0, 0)
   const price = getEffectivePrice(listing)
 
@@ -48,8 +47,6 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
           <p className="text-white font-semibold text-sm sm:text-base truncate">{listing.class_name}</p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-[10px] sm:text-xs text-white/70">{classTypeLabel}</span>
-            <span className="text-white/40 text-xs">·</span>
-            <span className="text-[10px] sm:text-xs text-white/70">{skillLabel}</span>
             {listing.neighborhood && (
               <>
                 <span className="text-white/40 text-xs hidden sm:inline">·</span>

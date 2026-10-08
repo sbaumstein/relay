@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendListingPostedEmail } from '@/lib/resend/client'
-import type { NewListingFormData, SkillLevel } from '@/types'
+import type { NewListingFormData } from '@/types'
 import { isBanned, BANNED_MESSAGE } from '@/lib/admin/ban'
 
 export async function POST(request: NextRequest) {
@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
       neighborhood: body.neighborhood || null,
       price_cents: body.price_cents,
       discount_price_cents: discountCents,
-      skill_level: body.skill_level ?? 'all_levels',
       studio_id: body.studio_id || null,
       confirmation_screenshot_url: body.confirmation_screenshot_url || null,
     })

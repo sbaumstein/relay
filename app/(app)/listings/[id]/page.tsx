@@ -6,7 +6,7 @@ import { ClaimButton } from '@/components/listings/ClaimButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { CLASS_TYPE_COLORS, CLASS_TYPES, SKILL_LEVELS, getSellerStats } from '@/types'
+import { CLASS_TYPE_COLORS, CLASS_TYPES, getSellerStats } from '@/types'
 import { StarRating } from '@/components/ui/StarRating'
 import { formatCents } from '@/lib/stripe/helpers'
 import { getEffectivePrice, DISCOUNT_WINDOW_HOURS, CONFIRMATION_RELEASE_HOURS } from '@/lib/pricing'
@@ -70,7 +70,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
   const classTypeLabel = CLASS_TYPES.find((t) => t.value === listing.class_type)?.label ?? listing.class_type
   const colorClass = CLASS_TYPE_COLORS[listing.class_type]
-  const skillLabel = SKILL_LEVELS.find((s) => s.value === listing.skill_level)?.label
 
   const studio = listing.studio as {
     name: string
@@ -113,11 +112,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colorClass}`}>
               {classTypeLabel}
             </span>
-            {skillLabel && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                {skillLabel}
-              </span>
-            )}
             {listing.status !== 'available' && (
               <Badge variant="secondary">
                 {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}

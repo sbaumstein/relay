@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import type { ClassType, SkillLevel } from '@/types'
+import type { ClassType } from '@/types'
 
 /** Fields a seller may change after posting. Studio is excluded: it determines
  *  the cancellation policy a buyer agreed to, so it can't be swapped out. */
@@ -8,7 +8,6 @@ interface EditableListing {
   class_name: string
   instructor_name?: string | null
   class_type: ClassType
-  skill_level: SkillLevel
   description?: string | null
   class_date: string
   class_time: string
@@ -94,7 +93,6 @@ export async function PATCH(
       class_name: body.class_name,
       instructor_name: body.instructor_name || null,
       class_type: body.class_type,
-      skill_level: body.skill_level ?? 'all_levels',
       description: body.description || null,
       class_date: body.class_date,
       class_time: body.class_time,
