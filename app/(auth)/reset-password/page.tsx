@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+const labelClass = 'text-xs text-white/50 uppercase tracking-widest'
+const inputClass =
+  'bg-white/5 border-white/20 rounded-lg h-11 text-white placeholder:text-white/30 focus-visible:border-white/50 focus-visible:ring-0'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -41,43 +43,47 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#1a1a1a]">
-      <a href="/" className="text-2xl font-bold mb-8">Relay</a>
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Set new password</CardTitle>
-          <CardDescription>Choose a new password for your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">New password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm">Confirm password</Label>
-              <Input
-                id="confirm"
-                type="password"
-                placeholder="••••••••"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Updating…' : 'Update password'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#1a1a1a] text-white">
+      <a href="/" className="text-xl font-bold uppercase tracking-widest mb-8">Relay</a>
+      <div className="w-full max-w-md border border-white/20 rounded-xl p-5">
+        <p className={labelClass}>Account recovery</p>
+        <h1 className="text-2xl font-semibold mt-2">Set new password</h1>
+        <p className="text-sm text-white/60 mt-1">At least 6 characters.</p>
+
+        <form onSubmit={handleSubmit} className="space-y-5 mt-7">
+          <div className="space-y-2">
+            <Label htmlFor="password" className={labelClass}>New password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              className={inputClass}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm" className={labelClass}>Confirm password</Label>
+            <Input
+              id="confirm"
+              type="password"
+              placeholder="••••••••"
+              className={inputClass}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-white text-black font-semibold rounded-lg py-3 text-sm uppercase tracking-widest hover:bg-white/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {loading ? 'Updating…' : 'Update password'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

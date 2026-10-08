@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 
 const labelClass = 'text-xs text-white/50 uppercase tracking-widest'
 const inputClass =
-  'bg-white/5 border-white/20 rounded-none h-11 text-white placeholder:text-white/30 focus-visible:border-white/50 focus-visible:ring-0'
+  'bg-white/5 border-white/20 rounded-lg h-11 text-white placeholder:text-white/30 focus-visible:border-white/50 focus-visible:ring-0'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-white text-black font-semibold py-3 text-sm uppercase tracking-widest hover:bg-white/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full bg-white text-black font-semibold rounded-lg py-3 text-sm uppercase tracking-widest hover:bg-white/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
               >
                 {loading ? 'Sending…' : 'Send reset link'}
               </button>

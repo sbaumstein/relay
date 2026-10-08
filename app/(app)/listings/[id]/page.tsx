@@ -224,9 +224,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 </span>
                 <StarRating stars={sellerStats.stars} total={sellerStats.total} showLabel />
               </div>
-              <p className="text-xs text-white/50">
-                Seller is paid {DEFAULT_HOLD_HOURS}hr after class
-              </p>
             </div>
           </div>
         </div>

@@ -29,7 +29,7 @@ function Dropdown({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="w-full bg-white/5 border border-white/20 text-sm text-white pl-3 pr-9 py-2.5
+        className="w-full bg-white/5 border border-white/20 rounded-lg text-sm text-white pl-3 pr-9 py-2.5
                    cursor-pointer appearance-none transition-colors
                    hover:border-white/40 focus:outline-none focus:border-white/50
                    [&>option]:bg-neutral-900 [&>option]:text-white"
@@ -85,7 +85,7 @@ export function ListingFilters() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search class, studio or neighborhood…"
-          className="w-full bg-white/5 border border-white/20 pl-9 pr-9 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/50"
+          className="w-full bg-white/5 border border-white/20 rounded-lg pl-9 pr-9 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/50"
         />
         {search && (
           <button
