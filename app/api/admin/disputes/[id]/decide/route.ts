@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
-
-const ADMIN_EMAIL = 'sambaumstein@gmail.com'
+import { getAdminUser } from '@/lib/admin/auth'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!(await getAdminUser())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

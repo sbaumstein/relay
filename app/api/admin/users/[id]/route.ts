@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getAdminUser, ADMIN_EMAIL } from '@/lib/admin/auth'
+import { getAdminUser, isAdminEmail } from '@/lib/admin/auth'
 import { revokeBannedUserActivity } from '@/lib/admin/revoke'
 
 type Action = 'ban' | 'unban' | 'set_boost' | 'set_notes'
@@ -35,10 +35,10 @@ export async function PATCH(
     )
   }
   if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 })
-  // Banning the admin would lock you out of this panel. Adjusting your own
-  // credibility is harmless, so it stays allowed.
-  if (target.email === ADMIN_EMAIL && action === 'ban') {
-    return NextResponse.json({ error: 'You cannot ban the admin account' }, { status: 400 })
+  // Banning an admin could lock everyone out of this panel. Adjusting an
+  // admin's credibility is harmless, so it stays allowed.
+  if (isAdminEmail(target.email) && action === 'ban') {
+    return NextResponse.json({ error: 'You cannot ban an admin account' }, { status: 400 })
   }
 
   let patch: Record<string, unknown>
