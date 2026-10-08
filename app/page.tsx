@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { VideoBackground } from '@/components/ui/VideoBackground'
+import { AddToHomeScreen } from '@/components/ui/AddToHomeScreen'
 
 export default function HomePage() {
   return (
@@ -50,6 +51,8 @@ export default function HomePage() {
             Post a Spot
           </Link>
         </div>
+
+        <AddToHomeScreen />
       </div>
 
       {/* Footer */}
