@@ -12,9 +12,10 @@
      surface. Swap these two values to retune the whole app. */
   --color-brand: #b7aec9;
   --color-brand-soft: #d6d0e2;
-  /* The page behind everything — periwinkle at surface weight: the blue-violet
-     hue kept, the luminance dropped so white text still reads. */
-  --color-surface: #1D1E2A;
+  /* The page behind everything — soft smoke. Opaque rather than the earlier
+     translucent white, so the surface doesn't shift with whatever sits
+     behind it. */
+  --color-surface: #121212;
 }
 
 @theme inline {
