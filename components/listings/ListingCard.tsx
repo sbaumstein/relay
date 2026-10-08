@@ -11,7 +11,7 @@ import { weekdayShort, monthShort, dayOfMonth, timeLabel } from '@/lib/datetime'
  * tint with the studio as its subject. The class type is named in the corner
  * label, so colour doesn't need to encode it.
  */
-const TILE_TINT = 'from-orange-900/55 to-orange-950/20'
+const TILE_TINT = 'from-white to-neutral-200'
 
 interface ListingCardProps {
   listing: Listing
@@ -35,12 +35,12 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
       <div
         className={`relative aspect-[5/2] rounded-xl overflow-hidden bg-gradient-to-br ${TILE_TINT} border border-white/10`}
       >
-        <span className="absolute top-2.5 left-3 text-[10px] uppercase tracking-widest text-white/60">
+        <span className="absolute top-2.5 left-3 text-[10px] uppercase tracking-widest text-neutral-500">
           {classTypeLabel}
         </span>
 
         {price.discounted && (
-          <span className="absolute top-2.5 right-2.5 text-[10px] uppercase tracking-widest text-emerald-300 border border-emerald-400/40 rounded-full px-2 py-0.5">
+          <span className="absolute top-2.5 right-2.5 text-[10px] uppercase tracking-widest text-emerald-700 border border-emerald-600/40 rounded-full px-2 py-0.5">
             Last minute
           </span>
         )}
@@ -55,7 +55,7 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
             />
           ) : (
             // No asset yet, so set the name as a wordmark rather than leave a hole.
-            <p className={`text-center ${wordmarkSize} font-bold uppercase tracking-widest text-white/90 leading-tight`}>
+            <p className={`text-center ${wordmarkSize} font-bold uppercase tracking-widest text-neutral-900 leading-tight`}>
               {listing.studio_name}
             </p>
           )}
