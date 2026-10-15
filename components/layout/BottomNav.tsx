@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Compass, User, LogOut, Plus } from 'lucide-react'
+import { Compass, MessageCircle, User, LogOut, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 
@@ -35,11 +35,20 @@ export function BottomNav({ user }: BottomNavProps) {
       // Clear the home indicator on phones rather than sitting under it.
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="relative max-w-2xl mx-auto px-8 h-16 flex items-center justify-between">
-        <Link href="/browse" className={itemClass(pathname === '/browse')}>
-          <Compass className="h-5 w-5" />
-          Browse
-        </Link>
+      <div className="relative max-w-2xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-5 sm:gap-7">
+          <Link href="/browse" className={itemClass(pathname === '/browse')}>
+            <Compass className="h-5 w-5" />
+            Browse
+          </Link>
+
+          {user && (
+            <Link href="/messages" className={itemClass(pathname.startsWith('/messages'))}>
+              <MessageCircle className="h-5 w-5" />
+              Messages
+            </Link>
+          )}
+        </div>
 
         {/* Centred independently of the side items, so it stays put whether
             the right side shows two links or one. */}
@@ -52,7 +61,7 @@ export function BottomNav({ user }: BottomNavProps) {
         </Link>
 
         {user ? (
-          <div className="flex items-center gap-7">
+          <div className="flex items-center gap-5 sm:gap-7">
             <Link href="/dashboard" className={itemClass(pathname === '/dashboard')}>
               <User className="h-5 w-5" />
               Profile
@@ -63,7 +72,7 @@ export function BottomNav({ user }: BottomNavProps) {
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-7">
+          <div className="flex items-center gap-5 sm:gap-7">
             <Link href="/login" className={itemClass(pathname === '/login')}>
               <User className="h-5 w-5" />
               Sign in
