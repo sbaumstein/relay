@@ -153,6 +153,18 @@ export interface Claim {
   listing?: Listing
 }
 
+export interface Message {
+  id: string
+  /** The claim is the thread: it pairs exactly one buyer with one seller. */
+  claim_id: string
+  sender_id: string
+  body: string
+  created_at: string
+  /** Set by the recipient when they open the thread. Null while unread. */
+  read_at: string | null
+  sender?: Profile
+}
+
 export interface NewListingFormData {
   studio_id: string
   studio_name: string
