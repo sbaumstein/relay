@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { Navbar } from '@/components/layout/Navbar'
+import { BottomNav } from '@/components/layout/BottomNav'
 import type { Profile } from '@/types'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -18,8 +18,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-surface">
-      <Navbar user={profile} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</main>
+      {/* pb clears the fixed bar plus the phone's home-indicator inset. */}
+      <main
+        className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8"
+        style={{ paddingBottom: 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        {children}
+      </main>
+      <BottomNav user={profile} />
     </div>
   )
 }

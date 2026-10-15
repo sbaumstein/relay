@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic'
 
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ListingCard } from '@/components/listings/ListingCard'
 import { ListingFilters } from '@/components/listings/ListingFilters'
@@ -208,13 +207,6 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
       >
         <BrowseContent searchParams={searchParams} />
       </Suspense>
-
-      <Link
-        href="/listings/new"
-        className="fixed bottom-8 right-8 h-14 w-14 rounded-2xl bg-white text-neutral-900 shadow-lg flex items-center justify-center hover:bg-emerald-400 hover:scale-105 transition-all z-50"
-      >
-        <Plus className="h-7 w-7" strokeWidth={2.25} />
-      </Link>
     </div>
   )
 }

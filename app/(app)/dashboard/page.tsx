@@ -5,7 +5,6 @@ import { formatCents } from '@/lib/stripe/helpers'
 import { CLASS_TYPES, getSellerStats } from '@/types'
 import { StarRating } from '@/components/ui/StarRating'
 import type { Listing, Claim, Profile } from '@/types'
-import { Plus } from 'lucide-react'
 import { DisputeResponseCard } from '@/components/claims/DisputeResponseCard'
 import { expireStaleListings } from '@/lib/expireListings'
 import { monthShort, dayOfMonth, shortDateTimeLabel } from '@/lib/datetime'
@@ -262,13 +261,6 @@ export default async function DashboardPage() {
         )}
       </HistorySection>
 
-      {/* FAB */}
-      <Link
-        href="/listings/new"
-        className="fixed bottom-8 right-8 h-14 w-14 rounded-2xl bg-white text-neutral-900 flex items-center justify-center hover:bg-emerald-400 hover:scale-105 transition-all z-50 shadow-lg"
-      >
-        <Plus className="h-7 w-7" strokeWidth={2.25} />
-      </Link>
     </div>
   )
 }

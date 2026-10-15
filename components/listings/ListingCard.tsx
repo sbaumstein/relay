@@ -25,10 +25,10 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
 
   return (
     <Link href={`/listings/${listing.id}`} className="group block">
-      <div className="flex items-center gap-4 sm:gap-6 px-3 sm:px-4 py-4 rounded-xl transition-colors group-hover:bg-white/[0.07]">
+      <div className="flex items-center gap-3 sm:gap-6 px-2 sm:px-4 py-4 rounded-xl transition-colors group-hover:bg-white/[0.07]">
 
         {/* Date */}
-        <div className="w-24 sm:w-28 flex-shrink-0">
+        <div className="w-[72px] sm:w-28 flex-shrink-0">
           <p className="text-white font-semibold leading-tight">
             {monthShort(classDate)} {dayOfMonth(classDate)}
           </p>
@@ -70,7 +70,7 @@ export function ListingCard({ listing, sellerStats }: ListingCardProps) {
           )}
         </div>
 
-        <ChevronRight className="h-4 w-4 flex-shrink-0 text-white/25 group-hover:text-white/60 transition-colors" />
+        <ChevronRight className="hidden sm:block h-4 w-4 flex-shrink-0 text-white/25 group-hover:text-white/60 transition-colors" />
       </div>
     </Link>
   )
