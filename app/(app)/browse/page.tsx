@@ -15,9 +15,32 @@ interface BrowsePageProps {
   searchParams: Promise<{
     class_type?: string
     neighborhood?: string
+    studio?: string
     q?: string
     sort?: string
   }>
+}
+
+/**
+ * The studio dropdown lives outside BrowseContent (it must render with the
+ * filters, before the listings resolve), so it needs its own narrow read.
+ * Only status/date are applied — not the active filters — so the option list
+ * stays stable instead of collapsing to whatever is already selected.
+ */
+async function getStudioOptions() {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('listings')
+    .select('studio_name')
+    .eq('status', 'available')
+    .gte('class_datetime', new Date().toISOString())
+    .limit(500)
+
+  const names = (data ?? [])
+    .map((r) => (r as { studio_name: string | null }).studio_name)
+    .filter((n): n is string => !!n && n.trim().length > 0)
+
+  return [...new Set(names)].sort((a, b) => a.localeCompare(b))
 }
 
 async function BrowseContent({ searchParams }: BrowsePageProps) {
@@ -49,6 +72,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
 
     if (params.class_type) q = q.eq('class_type', params.class_type as ClassType)
     if (params.neighborhood) q = q.eq('neighborhood', params.neighborhood)
+    if (params.studio) q = q.eq('studio_name', params.studio)
 
     // Commas and parens are delimiters in PostgREST's or() syntax, so strip them
     // rather than let a stray character break the whole filter.
@@ -77,7 +101,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
     return (
       <div className="flex gap-6" style={{ height: 'calc(100vh - 180px)' }}>
         <div className="flex-1 flex items-center justify-center text-white/60 text-sm border-t border-white/20">
-          {params.q || params.class_type
+          {params.q || params.class_type || params.studio
             ? 'No spots match your search'
             : 'No spots available — check back soon'}
         </div>
@@ -142,7 +166,8 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   // rather than an update, so the skeleton shows immediately instead of the
   // page sitting on stale results until the server answers.
   const p = await searchParams
-  const filterKey = [p.class_type, p.neighborhood, p.q, p.sort].join('|')
+  const filterKey = [p.class_type, p.neighborhood, p.studio, p.q, p.sort].join('|')
+  const studios = await getStudioOptions()
 
   return (
     <div>
@@ -155,7 +180,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
 
       <div className="mb-6">
         <Suspense>
-          <ListingFilters />
+          <ListingFilters studios={studios} />
         </Suspense>
       </div>
 

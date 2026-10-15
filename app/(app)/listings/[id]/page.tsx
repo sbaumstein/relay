@@ -71,9 +71,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
     name: string
     cancellation_policy: string
     cancellation_fee_cents: number | null
-    payment_type: string
-    cancellation_cutoff_label?: string | null
-    cancellation_notes?: string | null
   } | null
 
   const price = getEffectivePrice(listing)
@@ -264,35 +261,6 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
                 ? `Booking confirmation unlocks ${CONFIRMATION_RELEASE_HOURS} hours before class starts.`
                 : 'Booking confirmation is unlocked after you claim this spot.'}
             </p>
-          </div>
-        )}
-
-        {/* Studio cancellation policy */}
-        {studio && (
-          <div className="border border-white/20 rounded-xl p-5 space-y-3">
-            <p className="text-xs text-white/50 uppercase tracking-widest">
-              {studio.name} cancellation policy
-            </p>
-            <div className="space-y-2 text-sm text-white/60">
-              {studio.cancellation_cutoff_label && (
-                <p>
-                  Free cancellation until{' '}
-                  <span className="font-bold text-white">{studio.cancellation_cutoff_label}</span>.
-                </p>
-              )}
-              {studio.cancellation_notes && <p>{studio.cancellation_notes}</p>}
-              <p>
-                If you don&apos;t show up,{' '}
-                <span className="font-bold text-red-500">{cancellationFeeDisplay}</span> goes to the
-                seller. The rest comes back to you.
-              </p>
-            </div>
-            <div className="border-t border-white/15 pt-3">
-              <p className="text-xs text-white/50 uppercase tracking-widest">Payment type</p>
-              <p className="text-white font-bold mt-1">
-                {studio.payment_type === 'prepaid' ? 'Prepaid' : 'Pay in person'}
-              </p>
-            </div>
           </div>
         )}
 

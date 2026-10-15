@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Search } from 'lucide-react'
 import { DisputeDecisionPanel } from './DisputeDecisionPanel'
 
@@ -11,11 +11,18 @@ export function AdminDisputeList({ disputes }: { disputes: Dispute[] }) {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'awaiting' | 'answered' | 'lapsed'>('all')
 
-  const now = Date.now()
+  // Bucketing a dispute against "now" would read differently on the server
+  // pass than at hydration, so the clock only starts after mount. Until then
+  // nothing is treated as lapsed, which both passes agree on.
+  const [now, setNow] = useState<number | null>(null)
+
+  useEffect(() => {
+    setNow(Date.now())
+  }, [])
 
   const categorize = (d: Dispute) => {
     if (d.seller_responded_at) return 'answered'
-    if (d.seller_response_deadline && new Date(d.seller_response_deadline).getTime() < now) return 'lapsed'
+    if (now !== null && d.seller_response_deadline && new Date(d.seller_response_deadline).getTime() < now) return 'lapsed'
     return 'awaiting'
   }
 
@@ -36,7 +43,7 @@ export function AdminDisputeList({ disputes }: { disputes: Dispute[] }) {
       ].some((f: string | null | undefined) => (f ?? '').toLowerCase().includes(q))
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disputes, query, filter])
+  }, [disputes, query, filter, now])
 
   const counts = {
     all: disputes.length,

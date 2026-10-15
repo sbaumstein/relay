@@ -86,12 +86,12 @@ export default async function AdminPage() {
         <h1 className="text-3xl font-bold text-white">Control Panel</h1>
       </div>
 
-      {/* Escrow summary */}
+      {/* Held funds summary */}
       <section>
-        <p className="text-xs text-white/50 uppercase tracking-widest mb-4">Escrow</p>
+        <p className="text-xs text-white/50 uppercase tracking-widest mb-4">Held funds</p>
         <div className="grid grid-cols-3 gap-4">
           <div className="border border-white/20 rounded-xl p-5">
-            <p className="text-xs text-white/50 mb-1">Total in escrow</p>
+            <p className="text-xs text-white/50 mb-1">Total held</p>
             <p className="text-2xl font-bold text-white">{formatCents(totalEscrow)}</p>
             <p className="text-xs text-white/40 mt-1">{escrowClaims.length} active claim{escrowClaims.length !== 1 ? 's' : ''}</p>
           </div>

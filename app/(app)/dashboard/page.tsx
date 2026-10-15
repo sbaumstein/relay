@@ -12,62 +12,7 @@ import { monthShort, dayOfMonth, shortDateTimeLabel } from '@/lib/datetime'
 import { releaseMaturedClaims, DEFAULT_HOLD_HOURS } from '@/lib/autoRelease'
 import { getDisputeWindow } from '@/lib/disputeWindow'
 import { HistorySection } from '@/components/dashboard/HistorySection'
-
-function StatusPill({ status }: { status: string }) {
-  // The stored names are historical: pending_confirmation dates from when a
-  // seller had to confirm the handover. That step is gone, so it is simply the
-  // claimed state now, and pending_payment is the one still settling.
-  const styles: Record<string, { color: string; label: string }> = {
-    available:            { color: 'text-emerald-400 border-emerald-400/30', label: 'Available' },
-    pending_payment:      { color: 'text-yellow-400 border-yellow-400/30',  label: 'Pending' },
-    pending_confirmation: { color: 'text-blue-400 border-blue-400/30',      label: 'Claimed' },
-    claimed:              { color: 'text-blue-400 border-blue-400/30',      label: 'Claimed' },
-    completed:            { color: 'text-emerald-400 border-emerald-400/30',label: 'Completed' },
-    auto_released:        { color: 'text-emerald-400 border-emerald-400/30',label: 'Completed' },
-    disputed:             { color: 'text-orange-400 border-orange-400/30',  label: 'Under dispute' },
-    dispute_won:          { color: 'text-emerald-400 border-emerald-400/30',label: 'Dispute won' },
-    dispute_lost:         { color: 'text-red-400 border-red-400/30',        label: 'Dispute lost' },
-    needs_review:         { color: 'text-orange-400 border-orange-400/30',  label: 'Under review' },
-    expired:              { color: 'text-white/40 border-white/10',         label: 'Expired' },
-    cancelled:            { color: 'text-red-400 border-red-400/30',        label: 'Cancelled' },
-    refunded:             { color: 'text-white/40 border-white/10',         label: 'Refunded' },
-  }
-  const s = styles[status] ?? { color: 'text-white/70 border-white/20', label: status.replace(/_/g, ' ') }
-  return (
-    <span className={`text-xs border px-2 py-0.5 ${s.color}`}>
-      {s.label}
-    </span>
-  )
-}
-
-/** Settled listings and claims only need to be legible, not actionable. */
-function PastRow({
-  classDatetime, title, subtitle, status, amountCents,
-}: {
-  classDatetime: string
-  title: string
-  subtitle: string
-  status: string
-  amountCents: number
-}) {
-  const d = new Date(classDatetime)
-  return (
-    <div className="flex items-center gap-4 py-3 px-1 border-b border-white/10">
-      <div className="w-16 flex-shrink-0 text-center">
-        <p className="text-base font-semibold text-white/80 leading-none">{dayOfMonth(d)}</p>
-        <p className="text-xs text-white/50">{monthShort(d)}</p>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-white/80 text-sm truncate">{title}</p>
-        <p className="text-xs text-white/50 truncate">{subtitle}</p>
-      </div>
-      <div className="flex-shrink-0 flex items-center gap-3">
-        <StatusPill status={status} />
-        <p className="text-white/70 text-sm">{formatCents(amountCents)}</p>
-      </div>
-    </div>
-  )
-}
+import { StatusPill } from '@/components/dashboard/PastRow'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -113,19 +58,16 @@ export default async function DashboardPage() {
       .eq('seller_id', user.id)
       .eq('status', 'disputed')
       .order('disputed_at', { ascending: true }),
-    // Settled history, shown collapsed under each section.
+    // Settled history lives on its own page; here we only need the counts
+    // (and the claim statuses behind the "Bought" tally).
     supabase.from('listings')
-      .select('*')
+      .select('id')
       .eq('seller_id', user.id)
-      .or(`status.in.(expired,cancelled),class_datetime.lte.${holdCutoff}`)
-      .order('class_datetime', { ascending: false })
-      .limit(50),
+      .or(`status.in.(expired,cancelled),class_datetime.lte.${holdCutoff}`),
     supabase.from('claims')
-      .select('*, listing:listings(*)')
+      .select('id, status')
       .eq('claimer_id', user.id)
-      .in('status', ['completed', 'auto_released', 'refunded', 'dispute_won', 'dispute_lost'])
-      .order('created_at', { ascending: false })
-      .limit(50),
+      .in('status', ['completed', 'auto_released', 'refunded', 'dispute_won', 'dispute_lost']),
   ])
 
   // Map each of the seller's listings to its live claim, so they can report a
@@ -226,23 +168,7 @@ export default async function DashboardPage() {
         title={`My listings (${myListings?.length ?? 0})`}
         historyLabel="Previous listings"
         historyCount={pastListings?.length ?? 0}
-        history={
-          <div className="border-t border-white/10">
-            {(pastListings ?? []).map((listing) => {
-              const l = listing as Listing
-              return (
-                <PastRow
-                  key={l.id}
-                  classDatetime={l.class_datetime}
-                  title={l.class_name}
-                  subtitle={l.studio_name}
-                  status={l.status}
-                  amountCents={l.price_cents}
-                />
-              )
-            })}
-          </div>
-        }
+        historyHref="/listings/history"
       >
         {!myListings || myListings.length === 0 ? (
           <p className="text-white/60 text-sm py-8 text-center border border-white/20 rounded-xl">No listings yet</p>
@@ -289,21 +215,7 @@ export default async function DashboardPage() {
         title={`My claims (${myClaims?.length ?? 0})`}
         historyLabel="Previous claims"
         historyCount={pastClaims?.length ?? 0}
-        history={
-          <div className="border-t border-white/10">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {(pastClaims ?? []).map((c: any) => (
-              <PastRow
-                key={c.id}
-                classDatetime={c.listing?.class_datetime ?? c.created_at}
-                title={c.listing?.class_name ?? 'Class'}
-                subtitle={c.listing?.studio_name ?? ''}
-                status={c.status}
-                amountCents={c.amount_cents}
-              />
-            ))}
-          </div>
-        }
+        historyHref="/claims/history"
       >
         {!myClaims || myClaims.length === 0 ? (
           <p className="text-white/60 text-sm py-8 text-center border border-white/20 rounded-xl">No claims yet</p>

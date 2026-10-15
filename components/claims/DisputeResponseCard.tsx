@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
@@ -32,8 +32,18 @@ export function DisputeResponseCard({
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const remaining = deadline ? timeLeft(deadline) : null
-  const expired = !!deadline && !remaining
+  // The countdown depends on the current instant, so the server pass and the
+  // client's first render would disagree. Compute it after mount instead and
+  // render nothing time-derived until then.
+  const [remaining, setRemaining] = useState<string | null>(null)
+  const [clockReady, setClockReady] = useState(false)
+
+  useEffect(() => {
+    setRemaining(deadline ? timeLeft(deadline) : null)
+    setClockReady(true)
+  }, [deadline])
+
+  const expired = clockReady && !!deadline && !remaining
 
   const submit = async () => {
     if (!response.trim()) {
@@ -101,9 +111,11 @@ export function DisputeResponseCard({
         </p>
       ) : (
         <div className="space-y-3">
-          <p className="text-xs text-orange-400 font-medium">
-            {remaining} left to respond
-          </p>
+          {remaining && (
+            <p className="text-xs text-orange-400 font-medium">
+              {remaining} left to respond
+            </p>
+          )}
           <textarea
             value={response}
             onChange={(e) => setResponse(e.target.value)}

@@ -10,6 +10,10 @@ export const SORT_OPTIONS = [
   { value: 'price_low', label: 'Price' },
 ] as const
 
+/** Half-width (two up) on phones, fixed width once the row has room. */
+const CONTROL_CLASS =
+  'flex-1 basis-[calc(50%-0.375rem)] min-w-0 sm:basis-auto sm:w-36 sm:flex-none'
+
 /** Native select keeps the good mobile picker; the chevron is drawn on top. */
 function Dropdown({
   value, onChange, label, prefix, children, className = '',
@@ -46,12 +50,13 @@ function Dropdown({
   )
 }
 
-export function ListingFilters() {
+export function ListingFilters({ studios = [] }: { studios?: string[] }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const classType = searchParams.get('class_type') ?? ''
+  const studio = searchParams.get('studio') ?? ''
   const sort = searchParams.get('sort') ?? 'soonest'
   const queryParam = searchParams.get('q') ?? ''
 
@@ -103,12 +108,13 @@ export function ListingFilters() {
         )}
       </div>
 
-      <div className="flex gap-3">
+      {/* Three controls: two per row at phone width, one row from sm up. */}
+      <div className="flex flex-wrap gap-3">
         <Dropdown
           value={classType || 'all'}
           onChange={(v) => setParam('class_type', v)}
           label="Class type"
-          className="flex-1 sm:w-40 sm:flex-none"
+          className={CONTROL_CLASS}
         >
           <option value="all">All classes</option>
           {CLASS_TYPES.map((t) => (
@@ -116,12 +122,27 @@ export function ListingFilters() {
           ))}
         </Dropdown>
 
+        {/* Only the studios that actually have spots up, so no option is a dead end. */}
+        {studios.length > 0 && (
+          <Dropdown
+            value={studio || 'all'}
+            onChange={(v) => setParam('studio', v)}
+            label="Studio"
+            className={CONTROL_CLASS}
+          >
+            <option value="all">All studios</option>
+            {studios.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </Dropdown>
+        )}
+
         <Dropdown
           value={sort}
           onChange={(v) => setParam('sort', v)}
           label="Sort by"
           prefix="Sort:"
-          className="flex-1 sm:w-40 sm:flex-none"
+          className={CONTROL_CLASS}
         >
           {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>

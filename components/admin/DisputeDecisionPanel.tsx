@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { formatCents } from '@/lib/stripe/helpers'
@@ -29,6 +29,18 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
     router.refresh()
   }
 
+  // Whether the response window has closed is a "now" comparison, which the
+  // server pass and hydration would answer differently right at the boundary.
+  // Resolve it after mount; before that the window counts as still open.
+  const [windowClosed, setWindowClosed] = useState(false)
+
+  useEffect(() => {
+    setWindowClosed(
+      !!d.seller_response_deadline &&
+        new Date(d.seller_response_deadline) < new Date()
+    )
+  }, [d.seller_response_deadline])
+
   const classDate = d.listing?.class_datetime
     ? shortDateTimeLabel(d.listing.class_datetime)
     : '—'
@@ -44,7 +56,7 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
         </div>
         <div className="text-right flex-shrink-0">
           <p className="text-white font-bold text-lg">{formatCents(d.amount_cents)}</p>
-          <p className="text-white/40 text-xs">escrowed</p>
+          <p className="text-white/40 text-xs">held</p>
         </div>
       </div>
 
@@ -110,7 +122,7 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
               Responded {timestampLabel(d.seller_responded_at)}
             </p>
           </>
-        ) : d.seller_response_deadline && new Date(d.seller_response_deadline) < new Date() ? (
+        ) : windowClosed ? (
           <p className="text-red-400 text-xs">No response — 24h window closed {timestampLabel(d.seller_response_deadline)}</p>
         ) : (
           <p className="text-yellow-400 text-xs">

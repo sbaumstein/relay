@@ -84,12 +84,19 @@ export function NewListingForm({ profile }: NewListingFormProps) {
   // Today is allowed as long as the class time itself is still ahead.
   // Built from local parts: toISOString() is UTC and would roll over to
   // tomorrow during the evening, blocking same-day posts.
-  const today = new Date()
-  const minDateStr = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, '0'),
-    String(today.getDate()).padStart(2, '0'),
-  ].join('-')
+  // Derived from the *viewer's* clock, which is not the server's (Vercel runs
+  // UTC), so it is set after mount and the attribute is simply absent on the
+  // server pass rather than mismatching it.
+  const [minDateStr, setMinDateStr] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    const today = new Date()
+    setMinDateStr([
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, '0'),
+      String(today.getDate()).padStart(2, '0'),
+    ].join('-'))
+  }, [])
 
   useEffect(() => {
     fetch('/api/studios')
