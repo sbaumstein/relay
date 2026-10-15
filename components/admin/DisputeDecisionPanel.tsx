@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { formatCents } from '@/lib/stripe/helpers'
 import { shortDateTimeLabel, timestampLabel } from '@/lib/datetime'
+import { AdminClaimThread } from './AdminClaimThread'
 
 interface DisputeProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,6 +131,14 @@ export function DisputeDecisionPanel({ dispute: d }: DisputeProps) {
           </p>
         )}
       </div>
+
+      {/* Disputes constantly turn on "I told them in the chat" — the thread is
+          read here, collapsed until the admin deliberately opens it. */}
+      <AdminClaimThread
+        claimId={d.id}
+        buyerName={d.claimer?.full_name}
+        sellerName={d.seller?.full_name}
+      />
 
       <div className="flex gap-3">
         <button

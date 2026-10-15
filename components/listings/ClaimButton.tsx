@@ -46,11 +46,20 @@ export function ClaimButton({ listing, isLoggedIn, isOwner }: ClaimButtonProps) 
             </div>
             <p>
               Your {formatCents(price.cents)} is held safely until after the class.
-              Message the seller to get the booking details.
+              Message {listing.seller?.full_name || 'the seller'} to get the booking
+              details.
             </p>
-            <p className="font-medium">{listing.seller?.email}</p>
           </CardContent>
         </Card>
+        {listing.seller?.id && (
+          <Button
+            size="lg"
+            className="w-full rounded-xl bg-white text-neutral-900 hover:bg-emerald-400"
+            onClick={() => router.push(`/messages/${listing.seller!.id}`)}
+          >
+            Message {listing.seller?.full_name || 'the seller'}
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"

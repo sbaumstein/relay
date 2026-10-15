@@ -106,6 +106,62 @@ export async function sendListingPostedEmail({
   })
 }
 
+/**
+ * Message bodies are user-written, so they are escaped before going into the
+ * HTML (the other emails in this file only interpolate our own listing data).
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/**
+ * Tell the RECIPIENT of an in-app message that they have one waiting.
+ *
+ * Never names or exposes the sender's email address — the whole point of
+ * in-app messaging is that the two parties never see each other's addresses.
+ * The caller resolves `recipientEmail` server-side from `profiles`.
+ */
+export async function sendNewMessageEmail({
+  recipientEmail,
+  recipientName,
+  senderName,
+  senderId,
+  className,
+  studioName,
+  body,
+}: {
+  recipientEmail: string
+  recipientName: string | null
+  senderName: string | null
+  /** Used only to build the conversation link, never shown. */
+  senderId: string
+  className: string
+  studioName: string | null
+  body: string
+}) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  if (!isEmailAllowed(recipientEmail)) return
+
+  const from = senderName || 'Someone'
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL!,
+    to: recipientEmail,
+    subject: `New message from ${from} about ${className}`,
+    html: `
+      <h2>You have a new message</h2>
+      <p>Hi ${recipientName ?? 'there'},</p>
+      <p><strong>${escapeHtml(from)}</strong> sent you a message about <strong>${escapeHtml(className)}</strong>${studioName ? ` at <strong>${escapeHtml(studioName)}</strong>` : ''}.</p>
+      <blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid #ddd;color:#333;white-space:pre-wrap;">${escapeHtml(body)}</blockquote>
+      <p><a href="${appUrl}/messages/${senderId}">Reply in Workout Exchange</a></p>
+      <p>Class spots move fast — replying quickly keeps the handoff on track.</p>
+    `,
+  })
+}
+
 export const SELLER_RESPONSE_HOURS = 24
 
 export async function sendDisputeFiledEmail({

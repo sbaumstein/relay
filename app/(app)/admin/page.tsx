@@ -6,6 +6,7 @@ import { formatCents } from '@/lib/stripe/helpers'
 import { getSellerStats } from '@/types'
 import { AdminDisputeList } from '@/components/admin/AdminDisputeList'
 import { AdminUserTable, type AdminUserRow } from '@/components/admin/AdminUserTable'
+import { AdminMessageReports, type AdminReportRow } from '@/components/admin/AdminMessageReports'
 import { getAdminUser } from '@/lib/admin/auth'
 import { releaseMaturedClaims } from '@/lib/autoRelease'
 
@@ -22,6 +23,7 @@ export default async function AdminPage() {
     { data: profiles },
     { data: allClaims },
     { data: rawDisputes },
+    { data: rawReports, error: reportsError },
   ] = await Promise.all([
     service.from('profiles').select('*').order('created_at', { ascending: false }),
     service.from('claims').select('*, listing:listings(class_name, studio_name, class_datetime, price_cents)').order('created_at', { ascending: false }),
@@ -29,6 +31,13 @@ export default async function AdminPage() {
       .select('*, listing:listings(class_name, studio_name, class_datetime, price_cents, address)')
       .in('status', ['disputed', 'needs_review'])
       .order('disputed_at', { ascending: true }),
+    // message_reports may not exist yet (migration applied by hand), so this
+    // is read with its error kept rather than destructured away — the section
+    // below degrades to a notice instead of throwing the whole page.
+    service.from('message_reports')
+      .select('id, claim_id, reporter_id, reason, status, created_at')
+      .eq('status', 'open')
+      .order('created_at', { ascending: true }),
   ])
 
   // Hydrate claimer/seller onto disputes from the profiles we already fetched
@@ -38,6 +47,33 @@ export default async function AdminPage() {
     claimer: profileMap[d.claimer_id] ?? null,
     seller: profileMap[d.seller_id] ?? null,
   }))
+
+  // Open abuse reports, hydrated with the thread's two parties and the class
+  // they were transacting on. Reads nothing the admin panel doesn't already
+  // show elsewhere; the messages themselves are loaded on demand, per report.
+  const claimById = Object.fromEntries((allClaims ?? []).map(c => [c.id, c]))
+  const reportsUnavailable = !!reportsError
+  const reports: AdminReportRow[] = (rawReports ?? []).map(r => {
+    const claim = claimById[r.claim_id]
+    const otherId = claim
+      ? (claim.claimer_id === r.reporter_id ? claim.seller_id : claim.claimer_id)
+      : null
+    const reporter = profileMap[r.reporter_id] ?? null
+    const other = otherId ? profileMap[otherId] ?? null : null
+    return {
+      id: r.id,
+      claim_id: r.claim_id,
+      reason: r.reason ?? null,
+      status: r.status,
+      created_at: r.created_at,
+      reporterName: reporter?.full_name ?? null,
+      reporterEmail: reporter?.email ?? null,
+      counterpartyName: other?.full_name ?? null,
+      counterpartyEmail: other?.email ?? null,
+      className: claim?.listing?.class_name ?? null,
+      studioName: claim?.listing?.studio_name ?? null,
+    }
+  })
 
   // Escrow summary — claims where money is actively held
   const escrowStatuses = ['pending_payment', 'pending_confirmation', 'disputed']
@@ -116,6 +152,14 @@ export default async function AdminPage() {
           Open disputes ({disputes.length})
         </p>
         <AdminDisputeList disputes={disputes} />
+      </section>
+
+      {/* Reported conversations */}
+      <section>
+        <p className="text-xs text-white/50 uppercase tracking-widest mb-4">
+          Reported conversations{reportsUnavailable ? '' : ` (${reports.length})`}
+        </p>
+        <AdminMessageReports reports={reports} unavailable={reportsUnavailable} />
       </section>
 
       {/* Users */}

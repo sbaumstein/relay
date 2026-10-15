@@ -8,12 +8,14 @@ import type { Profile } from '@/types'
 
 interface BottomNavProps {
   user: Profile | null
+  /** Unread messages, counted server-side in the app layout. */
+  unreadCount?: number
 }
 
 /** Height of the bar itself, before the phone's home-indicator inset. */
 export const BOTTOM_NAV_HEIGHT = 64
 
-export function BottomNav({ user }: BottomNavProps) {
+export function BottomNav({ user, unreadCount = 0 }: BottomNavProps) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -43,8 +45,23 @@ export function BottomNav({ user }: BottomNavProps) {
           </Link>
 
           {user && (
-            <Link href="/messages" className={itemClass(pathname.startsWith('/messages'))}>
-              <MessageCircle className="h-5 w-5" />
+            <Link
+              href="/messages"
+              className={itemClass(pathname.startsWith('/messages'))}
+              aria-label={
+                unreadCount > 0 ? `Messages, ${unreadCount} unread` : 'Messages'
+              }
+            >
+              {/* The badge is absolutely positioned over the icon so it can
+                  never widen this item or nudge the other nav links. */}
+              <span className="relative">
+                <MessageCircle className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] text-center text-[10px] font-bold text-neutral-900 bg-emerald-400 rounded-full px-1 py-[1px] leading-none">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </span>
               Messages
             </Link>
           )}

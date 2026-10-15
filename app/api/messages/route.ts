@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { isBanned, BANNED_MESSAGE } from '@/lib/admin/ban'
 import { loadSharedClaims } from '@/app/(app)/messages/conversations'
+import { sendNewMessageEmail } from '@/lib/resend/client'
 
 const MAX_BODY_LENGTH = 2000
 
@@ -25,7 +26,9 @@ async function loadClaimForUser(
 ) {
   const { data } = await supabase
     .from('claims')
-    .select('id, claimer_id, seller_id')
+    .select(
+      'id, claimer_id, seller_id, listing:listings(class_name, studio_name)'
+    )
     .eq('id', claimId)
     .or(`claimer_id.eq.${userId},seller_id.eq.${userId}`)
     .maybeSingle()
@@ -120,6 +123,22 @@ export async function POST(request: NextRequest) {
   const claim = await loadClaimForUser(supabase, claim_id, user.id)
   if (!claim) return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
 
+  // Checked BEFORE the insert, so the message about to be written doesn't count
+  // itself: if the recipient already has an unread message from this sender on
+  // this claim, they were emailed about it and haven't come back, so another
+  // email would just be noise.
+  const hasPendingUnread = await (async () => {
+    const { count, error: unreadError } = await supabase
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('claim_id', claim_id)
+      .eq('sender_id', user.id)
+      .is('read_at', null)
+    // On an error, assume there is an unread backlog rather than risk spamming.
+    if (unreadError) return true
+    return (count ?? 0) > 0
+  })()
+
   // sender_id comes from the session, never the request body, so neither party
   // can post a message attributed to the other.
   const { data, error } = await supabase
@@ -133,7 +152,66 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Could not send message: ${error.message}` }, { status: 500 })
   }
 
+  // Fire-and-forget notification to the OTHER party. Never awaited into the
+  // response path and never allowed to throw: a Resend outage must not stop a
+  // message the user already saw saved.
+  if (process.env.RESEND_API_KEY && !hasPendingUnread) {
+    notifyRecipient({
+      claim,
+      senderId: user.id,
+      body: trimmed,
+    }).catch((e) => console.error('[messages] notification failed', e))
+  }
+
   return NextResponse.json({ message: data })
+}
+
+type ClaimForNotify = NonNullable<Awaited<ReturnType<typeof loadClaimForUser>>>
+
+/**
+ * Emails the counterparty about a freshly inserted message.
+ *
+ * The recipient is derived from the claim, never the request, and their address
+ * is read server-side from `profiles` with the service client (a user cannot
+ * read another profile's email under RLS). The sender's address is never used.
+ */
+async function notifyRecipient({
+  claim,
+  senderId,
+  body,
+}: {
+  claim: ClaimForNotify
+  senderId: string
+  body: string
+}) {
+  const recipientId = claim.claimer_id === senderId ? claim.seller_id : claim.claimer_id
+  if (!recipientId || recipientId === senderId) return
+
+  const serviceSupabase = createServiceClient()
+  const { data: profiles } = await serviceSupabase
+    .from('profiles')
+    .select('id, email, full_name')
+    .in('id', [recipientId, senderId])
+
+  const recipient = profiles?.find((p) => p.id === recipientId)
+  const sender = profiles?.find((p) => p.id === senderId)
+  if (!recipient?.email) return
+
+  // The generated types describe an embedded one-to-one join as an array, so
+  // normalize before reading it.
+  type ListingBits = { class_name: string | null; studio_name: string | null }
+  const embedded = (claim as unknown as { listing?: ListingBits | ListingBits[] | null }).listing
+  const listing: ListingBits | null = Array.isArray(embedded) ? embedded[0] ?? null : embedded ?? null
+
+  await sendNewMessageEmail({
+    recipientEmail: recipient.email,
+    recipientName: recipient.full_name ?? null,
+    senderName: sender?.full_name ?? null,
+    senderId,
+    className: listing?.class_name ?? 'your class',
+    studioName: listing?.studio_name ?? null,
+    body,
+  })
 }
 
 // PATCH /api/messages — mark the other party's messages as read, either for a

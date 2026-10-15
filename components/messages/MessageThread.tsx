@@ -41,6 +41,51 @@ export function MessageThread({
   const [unavailable, setUnavailable] = useState(loadFailed)
   const bottomRef = useRef<HTMLDivElement | null>(null)
 
+  // Reporting is deliberately a secondary, quiet action: closed by default,
+  // opens an inline panel (this project has no dialog component).
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reporting, setReporting] = useState(false)
+  const [reported, setReported] = useState(false)
+
+  /**
+   * The thread a report attaches to. Prefer the claim a new message would go
+   * to; once every shared claim has settled there is no send claim, so fall
+   * back to one of the claims this conversation covers. Either way the server
+   * re-validates that the reporter is a party to it — the client's id is never
+   * taken on trust.
+   */
+  const reportClaimId = sendClaimId ?? Object.keys(claimLabels)[0] ?? null
+
+  const submitReport = async () => {
+    if (!reportClaimId || reporting) return
+    setReporting(true)
+    try {
+      const res = await fetch('/api/messages/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claim_id: reportClaimId, reason: reportReason.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error ?? 'Could not submit your report')
+        return
+      }
+      setReported(true)
+      setReportOpen(false)
+      setReportReason('')
+      toast.success(
+        data.alreadyReported
+          ? 'You already reported this conversation. Our team is on it.'
+          : 'Reported. Our team will take a look.'
+      )
+    } catch {
+      toast.error('Could not submit your report')
+    } finally {
+      setReporting(false)
+    }
+  }
+
   // A conversation can span more than one class, so each run of messages gets
   // labelled with the claim it concerns; with a single claim the header
   // already says which class it is.
@@ -175,6 +220,64 @@ export function MessageThread({
           })
         )}
         <div ref={bottomRef} />
+
+        {/* Quiet abuse path. Not a primary action — a small link that opens an
+            inline panel, since this project has no dialog component. */}
+        {reportClaimId && (
+          <div className="pt-6">
+            {reported ? (
+              <p className="text-[11px] text-white/40 text-center">
+                You reported this conversation. Our team will take a look.
+              </p>
+            ) : reportOpen ? (
+              <div className="border border-white/15 rounded-xl p-4 space-y-3">
+                <p className="text-xs text-white/50 uppercase tracking-widest">
+                  Report conversation
+                </p>
+                <p className="text-xs text-white/50">
+                  Our team will read this conversation to look into it. Tell us what&apos;s
+                  wrong if you can — it&apos;s optional.
+                </p>
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="What happened? (optional)"
+                  className="w-full resize-none rounded-xl border border-white/20 bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void submitReport()}
+                    disabled={reporting}
+                    className="flex-1 border border-white/20 text-white rounded-xl px-4 py-2.5 text-xs uppercase tracking-widest hover:border-white/50 transition-colors disabled:opacity-50"
+                  >
+                    {reporting ? 'Sending' : 'Submit report'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReportOpen(false)}
+                    disabled={reporting}
+                    className="flex-shrink-0 text-xs uppercase tracking-widest text-white/50 px-3 py-2.5 hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setReportOpen(true)}
+                  className="text-[11px] text-white/40 hover:text-white/70 underline underline-offset-2 transition-colors"
+                >
+                  Report this conversation
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Sits above the fixed bottom nav (about 4rem) plus the home indicator. */}
