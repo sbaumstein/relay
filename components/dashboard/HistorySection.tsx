@@ -27,15 +27,15 @@ export function HistorySection({
     <div className="mb-10">
       <div className="flex items-center justify-between gap-3 mb-4">
         <p className="text-xs text-white/60 uppercase tracking-widest">{title}</p>
-        {historyCount > 0 && (
-          <Link
-            href={historyHref}
-            className="flex items-center gap-1 text-xs text-white/60 hover:text-white transition-colors flex-shrink-0"
-          >
-            {historyLabel} ({historyCount})
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        )}
+        {/* Shown even at zero: the link is how someone learns the history
+            page exists, and that page has its own empty state. */}
+        <Link
+          href={historyHref}
+          className="flex items-center gap-1 text-xs text-white/60 hover:text-white transition-colors flex-shrink-0"
+        >
+          {historyLabel}{historyCount > 0 && ` (${historyCount})`}
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
       </div>
 
       {children}
