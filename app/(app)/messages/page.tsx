@@ -1,27 +1,25 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { shortDateTimeLabel } from '@/lib/datetime'
+import {
+  counterpartyLabel,
+  loadCounterpartyNames,
+  loadMyClaims,
+} from './conversations'
 
 /**
- * A claim IS a thread: it pairs exactly one buyer (claimer_id) with one seller
- * (seller_id). So the threads list is just "every claim I am a party to",
- * ordered by its most recent message.
+ * One row per PERSON, not per claim. A conversation with X is every message on
+ * every claim where {me, X} are the two parties — grouped here, in the
+ * application layer, with messages.claim_id left exactly as it is.
  */
 
-type ClaimRow = {
-  id: string
-  claimer_id: string
-  seller_id: string
-  created_at: string
-  listing?: { class_name: string | null; studio_name: string | null } | null
-}
-
-type Thread = {
-  claimId: string
+type Conversation = {
+  otherId: string
   counterpartyName: string
-  className: string
-  studioName: string
+  /** The class the most recent message concerns, for a bit of context. */
+  contextLabel: string
   preview: string | null
   lastAt: string
   unread: number
@@ -33,24 +31,19 @@ export default async function MessagesPage() {
 
   if (!user) redirect('/login?redirectTo=/messages')
 
-  // claims has split per-side SELECT policies, so each side is read on its own
-  // rather than with a single OR that one policy might not cover.
-  const claimSelect = 'id, claimer_id, seller_id, created_at, listing:listings(class_name, studio_name)'
-  const [{ data: asBuyer }, { data: asSeller }] = await Promise.all([
-    supabase.from('claims').select(claimSelect).eq('claimer_id', user.id),
-    supabase.from('claims').select(claimSelect).eq('seller_id', user.id),
-  ])
-
-  const byId = new Map<string, ClaimRow>()
-  for (const row of [...(asBuyer ?? []), ...(asSeller ?? [])] as unknown as ClaimRow[]) {
-    byId.set(row.id, row)
-  }
-  const claims = [...byId.values()]
+  const claims = await loadMyClaims(supabase, user.id)
   const claimIds = claims.map((c) => c.id)
+  const claimById = new Map(claims.map((c) => [c.id, c]))
 
   // The messages table may not exist yet in a given environment, so a failure
   // here degrades to "no previews / no badges" instead of a 500.
-  let messageRows: { claim_id: string; body: string; created_at: string; sender_id: string; read_at: string | null }[] = []
+  let messageRows: {
+    claim_id: string
+    body: string
+    created_at: string
+    sender_id: string
+    read_at: string | null
+  }[] = []
   if (claimIds.length > 0) {
     const { data, error } = await supabase
       .from('messages')
@@ -61,84 +54,98 @@ export default async function MessagesPage() {
   }
 
   // Counterparty names only — never an email address.
-  const otherIds = [...new Set(
-    claims.map((c) => (c.claimer_id === user.id ? c.seller_id : c.claimer_id))
-  )]
-  let names = new Map<string, string | null>()
-  if (otherIds.length > 0) {
-    const { data } = await supabase.from('profiles').select('id, full_name').in('id', otherIds)
-    names = new Map((data ?? []).map((p) => [p.id, p.full_name]))
-  }
+  const otherIds = [...new Set(claims.map((c) => c.otherId))]
+  const names = await loadCounterpartyNames(supabase, otherIds)
 
-  const lastByClaim = new Map<string, { body: string; created_at: string }>()
-  const unreadByClaim = new Map<string, number>()
+  // Fold every message into its counterparty's bucket.
+  const lastByPerson = new Map<string, { body: string; created_at: string; claim_id: string }>()
+  const unreadByPerson = new Map<string, number>()
   for (const m of messageRows) {
-    // rows arrive oldest-first, so the final write per claim is the latest.
-    lastByClaim.set(m.claim_id, { body: m.body, created_at: m.created_at })
+    const claim = claimById.get(m.claim_id)
+    if (!claim) continue
+    // rows arrive oldest-first, so the final write per person is the latest.
+    lastByPerson.set(claim.otherId, {
+      body: m.body,
+      created_at: m.created_at,
+      claim_id: m.claim_id,
+    })
     if (m.sender_id !== user.id && m.read_at === null) {
-      unreadByClaim.set(m.claim_id, (unreadByClaim.get(m.claim_id) ?? 0) + 1)
+      unreadByPerson.set(claim.otherId, (unreadByPerson.get(claim.otherId) ?? 0) + 1)
     }
   }
 
-  const threads: Thread[] = claims
-    .map((c) => {
-      const iAmBuyer = c.claimer_id === user.id
-      const otherId = iAmBuyer ? c.seller_id : c.claimer_id
-      const last = lastByClaim.get(c.id)
+  // A shared claim on its own is not a conversation — the inbox lists only
+  // people someone has actually written to. New ones start from "+".
+  const conversations: Conversation[] = otherIds
+    .filter((otherId) => lastByPerson.has(otherId))
+    .map((otherId) => {
+      // claims is newest-first, so this is the latest claim with this person.
+      const newest = claims.find((c) => c.otherId === otherId)!
+      const last = lastByPerson.get(otherId)
+      const contextClaim = (last && claimById.get(last.claim_id)) || newest
       return {
-        claimId: c.id,
-        counterpartyName: names.get(otherId) || (iAmBuyer ? 'Seller' : 'Buyer'),
-        className: c.listing?.class_name ?? 'Class',
-        studioName: c.listing?.studio_name ?? '',
+        otherId,
+        counterpartyName: counterpartyLabel(names.get(otherId), newest.iAmBuyer),
+        contextLabel:
+          contextClaim.className +
+          (contextClaim.studioName ? ` · ${contextClaim.studioName}` : ''),
         preview: last?.body ?? null,
-        lastAt: last?.created_at ?? c.created_at,
-        unread: unreadByClaim.get(c.id) ?? 0,
+        lastAt: last?.created_at ?? newest.createdAt,
+        unread: unreadByPerson.get(otherId) ?? 0,
       }
     })
     .sort((a, b) => new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime())
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-8">
-        <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Inbox</p>
-        <h1 className="text-3xl font-bold text-white">Messages</h1>
+      <div className="mb-8 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Inbox</p>
+          <h1 className="text-3xl font-bold text-white">Messages</h1>
+        </div>
+        <Link
+          href="/messages/new"
+          aria-label="New message"
+          title="New message"
+          className="flex-shrink-0 h-11 w-11 rounded-xl bg-white text-neutral-900 flex items-center justify-center hover:bg-emerald-400 transition-colors"
+        >
+          <Plus className="h-5 w-5" strokeWidth={2.25} />
+        </Link>
       </div>
 
-      {threads.length === 0 ? (
+      {conversations.length === 0 ? (
         <div className="border border-white/20 rounded-xl p-8 text-center">
           <p className="text-white font-semibold">No messages yet</p>
           <p className="text-sm text-white/60 mt-2">
-            Once you claim a spot or sell one of yours, you&apos;ll be able to message the
-            other person right here.
+            Start one with + above — you can message anyone whose spot you&apos;ve
+            claimed, or who claimed yours.
           </p>
         </div>
       ) : (
         <div className="border-t border-white/20">
-          {threads.map((t) => (
+          {conversations.map((c) => (
             <Link
-              key={t.claimId}
-              href={`/messages/${t.claimId}`}
+              key={c.otherId}
+              href={`/messages/${c.otherId}`}
               className="flex items-start gap-3 py-4 px-1 border-b border-white/20 hover:bg-white/6 transition-colors group"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-white font-medium truncate">{t.counterpartyName}</p>
-                  {t.unread > 0 && (
+                  <p className="text-white font-medium truncate">{c.counterpartyName}</p>
+                  {c.unread > 0 && (
                     <span className="flex-shrink-0 text-[10px] font-bold text-neutral-900 bg-emerald-400 rounded-full px-1.5 py-0.5 leading-none">
-                      {t.unread}
+                      {c.unread}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-white/60 truncate mt-0.5">
-                  {t.className}{t.studioName ? ` · ${t.studioName}` : ''}
-                </p>
-                <p className={`text-sm truncate mt-1.5 ${t.unread > 0 ? 'text-white' : 'text-white/50'}`}>
-                  {t.preview ?? 'No messages yet — say hello'}
+                <p className="text-xs text-white/60 truncate mt-0.5">{c.contextLabel}</p>
+                <p className={`text-sm truncate mt-1.5 ${c.unread > 0 ? 'text-white' : 'text-white/50'}`}>
+                  {c.preview}
                 </p>
               </div>
               <div className="flex-shrink-0 flex items-center gap-2 pt-0.5">
                 <span className="text-[11px] text-white/40 whitespace-nowrap">
-                  {shortDateTimeLabel(t.lastAt)}
+                  {shortDateTimeLabel(c.lastAt)}
                 </span>
                 <span className="text-white/40 group-hover:text-white/75 transition-colors">→</span>
               </div>
