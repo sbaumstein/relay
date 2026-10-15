@@ -140,3 +140,95 @@ export const counterpartyLabel = (
   fullName: string | null | undefined,
   iAmBuyer: boolean
 ) => fullName || (iAmBuyer ? 'Seller' : 'Buyer')
+
+export type Conversation = {
+  otherId: string
+  counterpartyName: string
+  /** The class the most recent message concerns, for a bit of context. */
+  contextLabel: string
+  preview: string
+  lastAt: string
+  unread: number
+}
+
+/**
+ * Every conversation the user has actually had, split by whether there is
+ * still live business to discuss.
+ *
+ * A shared claim on its own is not a conversation — someone has to have
+ * written. `active` is the inbox; `archived` is everything whose claims have
+ * all settled, which stays readable but can no longer be added to.
+ */
+export async function loadConversations(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  userId: string,
+): Promise<{ active: Conversation[]; archived: Conversation[] }> {
+  const claims = await loadMyClaims(supabase, userId)
+  const claimIds = claims.map((c) => c.id)
+  const claimById = new Map(claims.map((c) => [c.id, c]))
+
+  // The messages table may be absent in a given environment, so a failure here
+  // degrades to "no conversations" rather than a 500.
+  let rows: {
+    claim_id: string
+    body: string
+    created_at: string
+    sender_id: string
+    read_at: string | null
+  }[] = []
+  if (claimIds.length > 0) {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('claim_id, body, created_at, sender_id, read_at')
+      .in('claim_id', claimIds)
+      .order('created_at', { ascending: true })
+    if (!error && data) rows = data
+  }
+
+  const otherIds = [...new Set(claims.map((c) => c.otherId))]
+  const names = await loadCounterpartyNames(supabase, otherIds)
+
+  const lastByPerson = new Map<string, { body: string; created_at: string; claim_id: string }>()
+  const unreadByPerson = new Map<string, number>()
+  for (const m of rows) {
+    const claim = claimById.get(m.claim_id)
+    if (!claim) continue
+    // rows arrive oldest-first, so the final write per person is the latest.
+    lastByPerson.set(claim.otherId, { body: m.body, created_at: m.created_at, claim_id: m.claim_id })
+    if (m.sender_id !== userId && m.read_at === null) {
+      unreadByPerson.set(claim.otherId, (unreadByPerson.get(claim.otherId) ?? 0) + 1)
+    }
+  }
+
+  const active: Conversation[] = []
+  const archived: Conversation[] = []
+
+  for (const otherId of otherIds) {
+    const last = lastByPerson.get(otherId)
+    if (!last) continue
+
+    const theirs = claims.filter((c) => c.otherId === otherId)
+    const newest = theirs[0]
+    const contextClaim = claimById.get(last.claim_id) ?? newest
+
+    const conversation: Conversation = {
+      otherId,
+      counterpartyName: counterpartyLabel(names.get(otherId), newest.iAmBuyer),
+      contextLabel:
+        contextClaim.className + (contextClaim.studioName ? ` · ${contextClaim.studioName}` : ''),
+      preview: last.body,
+      lastAt: last.created_at,
+      unread: unreadByPerson.get(otherId) ?? 0,
+    }
+
+    // Still live if any shared claim is going; otherwise the business is done.
+    if (theirs.some((c) => isActiveClaim(c.status))) active.push(conversation)
+    else archived.push(conversation)
+  }
+
+  const byRecency = (a: Conversation, b: Conversation) =>
+    new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime()
+
+  return { active: active.sort(byRecency), archived: archived.sort(byRecency) }
+}
